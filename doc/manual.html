@@ -1,0 +1,33 @@
+
+<html>
+<body>
+<h1>StealthDB manual</h1>
+
+<h3>How to start</h3>
+<ul>
+    <li>Install StealthDB extension<xmp>
+	create extension encdb;
+    </xmp></li>
+
+    <li>Start enclaves<xmp>
+	select launch();
+    </xmp></li>
+
+    <li>Enable decryption for client<xmp>
+	select enable_decryption(1);
+    </xmp></li>
+
+    <li>Try some examples<xmp>
+	select 1::encint + 2::encint;
+	select 10.5::encfloat / 2.2::encfloat;
+    </xmp></li>
+
+</ul>
+
+
+<a href="src/datatypes.html"><h3>Datatypes and operations</h3></a>
+
+
+
+</body>
+</html>

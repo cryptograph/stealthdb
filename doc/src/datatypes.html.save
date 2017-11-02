@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<body>
+Comparison (<, >, = ,!=, etc)
+Mathematical Operators (+, - , *, \, etc)
+Date/Time Functions (age, current_date, etc.)
+Data Type Formatting (TO_CHAR, TO_NUMBER, etc)
+Aggregate (AVG, SUM, MIN, etc)
+
+<p> <a href="integer.html">Integer</a> </p>
+
+<p> <a href="real.html">Real</a> </p>
+
+<p> <a href="text.html">Text</a> </p>
+
+<p> <a href="timestamp.html">Timestamp</a> </p>
+
+</body>
+</html>
