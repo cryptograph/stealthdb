@@ -1,11 +1,7 @@
-#include "stdafx.h"
-#include "encfloat.h"
-#include "encint.h"
-#include "encstring.h"
-#include "enctimestamp.h"
+#include "untrusted/extensions/stdafx.h"
 
 PG_MODULE_MAGIC;
-bool debugDecryption = false;
+bool debugMode = false;
 
 void sgxErrorHandler(int code)
 {
@@ -44,9 +40,9 @@ PG_FUNCTION_INFO_V1(launch);
 Datum
 launch(PG_FUNCTION_ARGS)
 {
-	//int resp = init();
 	int resp = initMultithreading();
 	sgxErrorHandler(resp);
+
 	resp = loadKey(0);
 	sgxErrorHandler(resp);
 
@@ -60,7 +56,7 @@ Datum
 generate_key(PG_FUNCTION_ARGS)
 {
 	int resp = generateKey();
-//	sgxErrorHandler(resp);
+	sgxErrorHandler(resp);
 
     PG_RETURN_INT32(resp);
 }
@@ -77,12 +73,12 @@ load_key(PG_FUNCTION_ARGS)
     PG_RETURN_INT32(resp);
 }
 
-PG_FUNCTION_INFO_V1(enable_decryption);
+PG_FUNCTION_INFO_V1(enable_debug_mode);
 Datum
-enable_decryption(PG_FUNCTION_ARGS)
+enable_debug_mode(PG_FUNCTION_ARGS)
 {
 	int item = PG_GETARG_INT64(0);
-	debugDecryption = item;
+	debugMode = item;
 
     PG_RETURN_INT32(0);
 }

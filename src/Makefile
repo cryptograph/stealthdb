@@ -1,8 +1,5 @@
-all:
-	$(MAKE) -f sgx_u.mk all
-	$(MAKE) -f sgx_t.mk all
+.PHONY: all clean
 
-clean:
-	$(MAKE) -f sgx_u.mk clean
-	$(MAKE) -f sgx_t.mk clean
-
+all clean:
+	$(MAKE) -f untrusted.mk $@
+	$(MAKE) -f enclave.mk $@ 

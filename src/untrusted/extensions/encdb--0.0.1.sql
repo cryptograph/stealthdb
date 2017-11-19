@@ -1,6 +1,10 @@
 -- complain if script is sourced in psql, rather than via CREATE EXTENSION
 \echo Use "CREATE EXTENSION encdb" to load this file. \quit
 
+CREATE FUNCTION launch() RETURNS integer
+AS '$libdir/encdb'
+LANGUAGE C IMMUTABLE STRICT;
+
 CREATE OR REPLACE FUNCTION generate_key()
 RETURNS int
 AS '$libdir/encdb'
@@ -11,110 +15,144 @@ RETURNS int
 AS '$libdir/encdb'
 LANGUAGE C IMMUTABLE STRICT;
 
-CREATE OR REPLACE FUNCTION enable_decryption(int)
+CREATE OR REPLACE FUNCTION enable_debug_mode(int)
 RETURNS int
-AS '$libdir/encdb'
+AS '$libdir/encdb'	
 LANGUAGE C IMMUTABLE STRICT;
 
 -------------------------------------------------------------------------------
 --ENCRYPTED INTEGER TYPE (randomized)
 -------------------------------------------------------------------------------
-CREATE OR REPLACE FUNCTION encint_in(cstring)
-RETURNS encint
+CREATE OR REPLACE FUNCTION pg_enc_int4_in(cstring)
+RETURNS enc_int4
 AS '$libdir/encdb'
 LANGUAGE C IMMUTABLE STRICT;
 
-CREATE OR REPLACE FUNCTION encint_out(encint)
+CREATE OR REPLACE FUNCTION pg_enc_int4_out(enc_int4)
 RETURNS cstring
 AS '$libdir/encdb'
 LANGUAGE C IMMUTABLE STRICT;
 
-CREATE FUNCTION encint_eq(encint, encint)
+CREATE FUNCTION pg_enc_int4_eq(enc_int4, enc_int4)
 RETURNS boolean 
 AS '$libdir/encdb'
 LANGUAGE C IMMUTABLE STRICT;
 
-CREATE FUNCTION encint_ne(encint, encint)
+CREATE FUNCTION pg_enc_int4_ne(enc_int4, enc_int4)
 RETURNS boolean 
 AS '$libdir/encdb'
 LANGUAGE C IMMUTABLE STRICT;
 
-CREATE FUNCTION encint_lt(encint, encint)
+CREATE FUNCTION pg_enc_int4_lt(enc_int4, enc_int4)
 RETURNS boolean 
 AS '$libdir/encdb'
 LANGUAGE C IMMUTABLE STRICT;
 
-CREATE FUNCTION encint_le(encint, encint)
+CREATE FUNCTION pg_enc_int4_le(enc_int4, enc_int4)
 RETURNS boolean 
 AS '$libdir/encdb'
 LANGUAGE C IMMUTABLE STRICT;
 
-CREATE FUNCTION encint_gt(encint, encint)
+CREATE FUNCTION pg_enc_int4_gt(enc_int4, enc_int4)
 RETURNS boolean 
 AS '$libdir/encdb'
 LANGUAGE C IMMUTABLE STRICT;
 
-CREATE FUNCTION encint_ge(encint, encint)
+CREATE FUNCTION pg_enc_int4_ge(enc_int4, enc_int4)
 RETURNS boolean 
 AS '$libdir/encdb'
 LANGUAGE C IMMUTABLE STRICT;
 
-CREATE FUNCTION encint_enc(integer)
-RETURNS encint
+CREATE FUNCTION pg_enc_int4_encrypt(integer)
+RETURNS enc_int4
 AS '$libdir/encdb'
 LANGUAGE C IMMUTABLE STRICT;
 
-CREATE FUNCTION encint_dec(encint)
+CREATE FUNCTION pg_enc_int4_decrypt(enc_int4)
 RETURNS integer
 AS '$libdir/encdb'
 LANGUAGE C IMMUTABLE STRICT;
 
+CREATE OR REPLACE FUNCTION pg_enc_int4_add(enc_int4, enc_int4)
+RETURNS enc_int4
+AS '$libdir/encdb'
+LANGUAGE C IMMUTABLE STRICT;
 
---CREATE OR REPLACE FUNCTION encint_recv(internal)
---RETURNS encint
+CREATE OR REPLACE FUNCTION pg_enc_int4_sub(enc_int4, enc_int4)
+RETURNS enc_int4
+AS '$libdir/encdb'
+LANGUAGE C IMMUTABLE STRICT;
+
+CREATE OR REPLACE FUNCTION pg_enc_int4_mult(enc_int4, enc_int4)
+RETURNS enc_int4
+AS '$libdir/encdb'
+LANGUAGE C IMMUTABLE STRICT;
+
+CREATE OR REPLACE FUNCTION pg_enc_int4_div(enc_int4, enc_int4)
+RETURNS enc_int4
+AS '$libdir/encdb'
+LANGUAGE C IMMUTABLE STRICT;
+
+CREATE OR REPLACE FUNCTION pg_enc_int4_mod(enc_int4, enc_int4)
+RETURNS enc_int4
+AS '$libdir/encdb'
+LANGUAGE C IMMUTABLE STRICT;
+
+CREATE OR REPLACE FUNCTION pg_enc_int4_pow(enc_int4, enc_int4)
+RETURNS enc_int4
+AS '$libdir/encdb'
+LANGUAGE C IMMUTABLE STRICT;
+
+CREATE OR REPLACE FUNCTION pg_enc_int4_cmp(enc_int4, enc_int4)
+RETURNS integer
+AS '$libdir/encdb'
+LANGUAGE C IMMUTABLE STRICT;
+
+--CREATE OR REPLACE FUNCTION pg_enc_int4_recv(internal)
+--RETURNS enc_int4
 --AS '$libdir/encdb'
 --LANGUAGE C IMMUTABLE STRICT;
 
---CREATE OR REPLACE FUNCTION encint_send(encint)
+--CREATE OR REPLACE FUNCTION pg_enc_int4_send(enc_int4)
 --RETURNS bytea
 --AS '$libdir/encdb'
 --LANGUAGE C IMMUTABLE STRICT;
 
-CREATE TYPE encint (
-    INPUT          = encint_in,
-    OUTPUT         = encint_out,
---    RECEIVE        = encint_recv,
---    SEND           = encint_send,
+CREATE TYPE enc_int4 (
+    INPUT          = pg_enc_int4_in,
+    OUTPUT         = pg_enc_int4_out,
+--    RECEIVE        = pg_enc_int4_recv,
+--    SEND           = pg_enc_int4_send,
     INTERNALLENGTH = 45,
     ALIGNMENT      = int4,
     STORAGE        = PLAIN
 );
-COMMENT ON TYPE encint IS 'ENCRYPTED INTEGER';
+COMMENT ON TYPE enc_int4 IS 'ENCRYPTED INTEGER';
 
-CREATE FUNCTION encint_addfinal(encint[])
-RETURNS encint
+CREATE FUNCTION pg_enc_int4_addfinal(enc_int4[])
+RETURNS enc_int4
 AS '$libdir/encdb'
 LANGUAGE C IMMUTABLE STRICT;
 
-CREATE FUNCTION encint_avgfinal(encint[])
-RETURNS encint
+CREATE FUNCTION pg_enc_int4_avgfinal(enc_int4[])
+RETURNS enc_int4
 AS '$libdir/encdb'
 LANGUAGE C IMMUTABLE STRICT;
 
-CREATE FUNCTION encint_minfinal(encint[])
-RETURNS encint
+CREATE FUNCTION pg_enc_int4_minfinal(enc_int4[])
+RETURNS enc_int4
 AS '$libdir/encdb'
 LANGUAGE C IMMUTABLE STRICT;
 
-CREATE FUNCTION encint_maxfinal(encint[])
-RETURNS encint
+CREATE FUNCTION pg_enc_int4_maxfinal(enc_int4[])
+RETURNS enc_int4
 AS '$libdir/encdb'
 LANGUAGE C IMMUTABLE STRICT;
 
 CREATE OPERATOR = (
-  LEFTARG = encint,
-  RIGHTARG = encint,
-  PROCEDURE = encint_eq,
+  LEFTARG = enc_int4,
+  RIGHTARG = enc_int4,
+  PROCEDURE = pg_enc_int4_eq,
   COMMUTATOR = '=',
   NEGATOR = '<>',
   RESTRICT = eqsel,
@@ -123,18 +161,18 @@ CREATE OPERATOR = (
 );
 
 CREATE OPERATOR <> (
-  LEFTARG = encint,
-  RIGHTARG = encint,
-  PROCEDURE = encint_ne,
+  LEFTARG = enc_int4,
+  RIGHTARG = enc_int4,
+  PROCEDURE = pg_enc_int4_ne,
   COMMUTATOR = '<>',
   NEGATOR = '=',
   RESTRICT = neqsel,
   JOIN = neqjoinsel
 );
 CREATE OPERATOR < (
-  LEFTARG = encint,
-  RIGHTARG = encint,
-  PROCEDURE = encint_lt,
+  LEFTARG = enc_int4,
+  RIGHTARG = enc_int4,
+  PROCEDURE = pg_enc_int4_lt,
   COMMUTATOR = > ,
   NEGATOR = >= ,
   RESTRICT = scalarltsel,
@@ -142,9 +180,9 @@ CREATE OPERATOR < (
 );
 
 CREATE OPERATOR <= (
-  LEFTARG = encint,
-  RIGHTARG = encint,
-  PROCEDURE = encint_le,
+  LEFTARG = enc_int4,
+  RIGHTARG = enc_int4,
+  PROCEDURE = pg_enc_int4_le,
   COMMUTATOR = >= ,
   NEGATOR = > ,
   RESTRICT = scalarltsel,
@@ -152,9 +190,9 @@ CREATE OPERATOR <= (
 );
 
 CREATE OPERATOR > (
-  LEFTARG = encint,
-  RIGHTARG = encint,
-  PROCEDURE = encint_gt,
+  LEFTARG = enc_int4,
+  RIGHTARG = enc_int4,
+  PROCEDURE = pg_enc_int4_gt,
   COMMUTATOR = < ,
   NEGATOR = <= ,
   RESTRICT = scalargtsel,
@@ -162,271 +200,202 @@ CREATE OPERATOR > (
 );
 
 CREATE OPERATOR >= (
-  LEFTARG = encint,
-  RIGHTARG = encint,
-  PROCEDURE = encint_ge,
+  LEFTARG = enc_int4,
+  RIGHTARG = enc_int4,
+  PROCEDURE = pg_enc_int4_ge,
   COMMUTATOR = <= ,
   NEGATOR = < ,
   RESTRICT = scalargtsel,
   JOIN = scalargtjoinsel
 );
 
---CREATE AGGREGATE sum_arr (encint)
+--CREATE AGGREGATE sum_arr (enc_int4)
 --(
 --   sfunc = array_append,
---   stype = encint[],   
---   finalfunc = encint_addfinal	
+--   stype = enc_int4[],   
+--   finalfunc = pg_enc_int4_addfinal	
 --);
 
-CREATE AGGREGATE avg (encint)
+CREATE AGGREGATE avg (enc_int4)
 (
    sfunc = array_append,
-   stype = encint[],
-   finalfunc = encint_avgfinal
+   stype = enc_int4[],
+   finalfunc = pg_enc_int4_avgfinal
 	
 );
 
-------------NEW---------------------------
-CREATE FUNCTION launch() RETURNS integer
-AS '$libdir/encdb'
-LANGUAGE C IMMUTABLE STRICT;
-
-CREATE OR REPLACE FUNCTION encintPlus(encint, encint)
-RETURNS encint
-AS '$libdir/encdb'
-LANGUAGE C IMMUTABLE STRICT;
-
-CREATE OR REPLACE FUNCTION encintMinus(encint, encint)
-RETURNS encint
-AS '$libdir/encdb'
-LANGUAGE C IMMUTABLE STRICT;
-
-CREATE OR REPLACE FUNCTION encintMult(encint, encint)
-RETURNS encint
-AS '$libdir/encdb'
-LANGUAGE C IMMUTABLE STRICT;
-
-CREATE OR REPLACE FUNCTION encintDiv(encint, encint)
-RETURNS encint
-AS '$libdir/encdb'
-LANGUAGE C IMMUTABLE STRICT;
-
-CREATE OR REPLACE FUNCTION encintMod(encint, encint)
-RETURNS encint
-AS '$libdir/encdb'
-LANGUAGE C IMMUTABLE STRICT;
-
-CREATE OR REPLACE FUNCTION encintExp(encint, encint)
-RETURNS encint
-AS '$libdir/encdb'
-LANGUAGE C IMMUTABLE STRICT;
-
-CREATE OR REPLACE FUNCTION encintcompare(encint, encint)
-RETURNS integer
-AS '$libdir/encdb'
-LANGUAGE C IMMUTABLE STRICT;
-
-CREATE AGGREGATE sum (encint)
+CREATE AGGREGATE sum (enc_int4)
 (
    sfunc = array_append,
-   stype = encint[],   
-   finalfunc = encint_addfinal
+   stype = enc_int4[],   
+   finalfunc = pg_enc_int4_addfinal
 );
 
-CREATE AGGREGATE min (encint)
+CREATE AGGREGATE min (enc_int4)
 (
    sfunc = array_append,
-   stype = encint[],   
-   finalfunc = encint_minfinal
+   stype = enc_int4[],   
+   finalfunc = pg_enc_int4_minfinal
 );
 
-CREATE AGGREGATE max (encint)
+CREATE AGGREGATE max (enc_int4)
 (
    sfunc = array_append,
-   stype = encint[],   
-   finalfunc = encint_maxfinal
+   stype = enc_int4[],   
+   finalfunc = pg_enc_int4_maxfinal
 );
-----------------------------------------------------------------
+
 CREATE OPERATOR + (
-  LEFTARG = encint,
-  RIGHTARG = encint,
---  PROCEDURE = encint_add
-  PROCEDURE = encintplus
+  LEFTARG = enc_int4,
+  RIGHTARG = enc_int4,
+  PROCEDURE = pg_enc_int4_add
 );
 
 
 CREATE OPERATOR - (
-  LEFTARG = encint,
-  RIGHTARG = encint,
---  PROCEDURE = encint_subs
-  PROCEDURE = encintminus
-
+  LEFTARG = enc_int4,
+  RIGHTARG = enc_int4,
+  PROCEDURE = pg_enc_int4_sub
 );
 
 CREATE OPERATOR * (
-  LEFTARG = encint,
-  RIGHTARG = encint,
---  PROCEDURE = encint_mult
-  PROCEDURE = encintmult
-
+  LEFTARG = enc_int4,
+  RIGHTARG = enc_int4,
+  PROCEDURE = pg_enc_int4_mult
 );
 
 CREATE OPERATOR / (
-  LEFTARG = encint,
-  RIGHTARG = encint,
---  PROCEDURE = encint_div
-  PROCEDURE = encintdiv
-
+  LEFTARG = enc_int4,
+  RIGHTARG = enc_int4,
+  PROCEDURE = pg_enc_int4_div
 );
 
 CREATE OPERATOR % (
-  LEFTARG = encint,
-  RIGHTARG = encint,
-  PROCEDURE = encintmod
+  LEFTARG = enc_int4,
+  RIGHTARG = enc_int4,
+  PROCEDURE = pg_enc_int4_mod
 );
 
 CREATE OPERATOR ^ (
-  LEFTARG = encint,
-  RIGHTARG = encint,
-  PROCEDURE = encintexp
+  LEFTARG = enc_int4,
+  RIGHTARG = enc_int4,
+  PROCEDURE = pg_enc_int4_pow
 );
 
 
-CREATE OPERATOR CLASS btree_encint_ops
-DEFAULT FOR TYPE encint USING btree
+CREATE OPERATOR CLASS btree_pg_enc_int4_ops
+DEFAULT FOR TYPE enc_int4 USING btree
 AS
         OPERATOR        1       <  ,
         OPERATOR        2       <= ,
         OPERATOR        3       =  ,
         OPERATOR        4       >= ,
         OPERATOR        5       >  ,
-        FUNCTION        1       encintcompare(encint, encint);
+        FUNCTION        1       pg_enc_int4_cmp(enc_int4, enc_int4);
 
-CREATE OR REPLACE FUNCTION encint(int4)
-	RETURNS encint
-    AS '$libdir/encdb', 'int4_to_encint'
+CREATE OR REPLACE FUNCTION enc_int4(int4)
+	RETURNS enc_int4
+    AS '$libdir/encdb', 'pg_int4_to_enc_int4'
 	LANGUAGE C STRICT IMMUTABLE;
 
-CREATE OR REPLACE FUNCTION encint(int8)
-	RETURNS encint
-    AS '$libdir/encdb', 'int8_to_encint'
+CREATE OR REPLACE FUNCTION enc_int4(int8)
+	RETURNS enc_int4
+    AS '$libdir/encdb', 'pg_int8_to_enc_int4'
 	LANGUAGE C STRICT IMMUTABLE;
 
-CREATE CAST (int4 AS encint) WITH FUNCTION encint(int4) AS ASSIGNMENT;
-CREATE CAST (int8 AS encint) WITH FUNCTION encint(int8) AS ASSIGNMENT;
-
---CREATE FUNCTION encstr_in(cstring)
---RETURNS encstr
---AS '$libdir/encdb'
---LANGUAGE C STRICT IMMUTABLE;
-
---CREATE FUNCTION encstr_out(encstr)
---RETURNS cstring
---AS '$libdir/encdb'
---LANGUAGE C STRICT IMMUTABLE;
-
---CREATE TYPE encstr (
---        INTERNALLENGTH = variable,
---        INPUT = encstr_in,
---        OUTPUT = encstr_out,
- --       --TYPMOD_IN = hll_typmod_in,
---        --TYPMOD_OUT = hll_typmod_out,
---        --RECEIVE = hll_recv,
---        --SEND = hll_send,
---        STORAGE = external
---);
-
+CREATE CAST (int4 AS enc_int4) WITH FUNCTION enc_int4(int4) AS ASSIGNMENT;
+CREATE CAST (int8 AS enc_int4) WITH FUNCTION enc_int4(int8) AS ASSIGNMENT;
 
 --------------------------------------------------------------------------------
 --ENCRYPTED STRING TYPE (randomized)
 --------------------------------------------------------------------------------
-CREATE OR REPLACE FUNCTION encstring_in(cstring)
-RETURNS encstring
+CREATE OR REPLACE FUNCTION pg_enc_text_in(cstring)
+RETURNS enc_text
 AS '$libdir/encdb'
 LANGUAGE C IMMUTABLE STRICT;
 
-CREATE OR REPLACE FUNCTION encstring_out(encstring)
+CREATE OR REPLACE FUNCTION pg_enc_text_out(enc_text)
 RETURNS cstring
 --LANGUAGE internal IMMUTABLE AS 'textout';
 AS '$libdir/encdb'
 LANGUAGE C IMMUTABLE STRICT;
 
-CREATE FUNCTION encstring_eq(encstring, encstring)
+CREATE FUNCTION pg_enc_text_eq(enc_text, enc_text)
 RETURNS boolean 
 AS '$libdir/encdb'
 LANGUAGE C IMMUTABLE STRICT;
 
-CREATE FUNCTION encstring_ne(encstring, encstring)
+CREATE FUNCTION pg_enc_text_ne(enc_text, enc_text)
 RETURNS boolean 
 AS '$libdir/encdb'
 LANGUAGE C IMMUTABLE STRICT;
 
-CREATE FUNCTION encstring_lt(encstring, encstring)
+CREATE FUNCTION pg_enc_text_lt(enc_text, enc_text)
 RETURNS boolean 
 AS '$libdir/encdb'
 LANGUAGE C IMMUTABLE STRICT;
 
-CREATE FUNCTION encstring_le(encstring, encstring)
+CREATE FUNCTION pg_enc_text_le(enc_text, enc_text)
 RETURNS boolean 
 AS '$libdir/encdb'
 LANGUAGE C IMMUTABLE STRICT;
 
-CREATE FUNCTION encstring_gt(encstring, encstring)
+CREATE FUNCTION pg_enc_text_gt(enc_text, enc_text)
 RETURNS boolean 
 AS '$libdir/encdb'
 LANGUAGE C IMMUTABLE STRICT;
 
-CREATE FUNCTION encstring_ge(encstring, encstring)
+CREATE FUNCTION pg_enc_text_ge(enc_text, enc_text)
 RETURNS boolean 
 AS '$libdir/encdb'
 LANGUAGE C IMMUTABLE STRICT;
 
-CREATE FUNCTION encstring_cmp(encstring, encstring)
+CREATE FUNCTION pg_enc_text_cmp(enc_text, enc_text)
 RETURNS integer 
 AS '$libdir/encdb'
 LANGUAGE C IMMUTABLE STRICT;
 
-CREATE FUNCTION encstring_concat(encstring, encstring)
-RETURNS encstring
+CREATE FUNCTION pg_enc_text_concatenate(enc_text, enc_text)
+RETURNS enc_text
 AS '$libdir/encdb'
 LANGUAGE C IMMUTABLE STRICT;
 
-CREATE FUNCTION encstring_like(encstring, encstring)
+CREATE FUNCTION pg_enc_text_like(enc_text, enc_text)
 RETURNS boolean
 AS '$libdir/encdb'
 LANGUAGE C IMMUTABLE STRICT;
 
---CREATE FUNCTION encstring_mult(encstring, encstring)
---RETURNS encstring
+--CREATE FUNCTION pg_enc_text_mult(enc_text, enc_text)
+--RETURNS enc_text
 --AS '$libdir/encdb'
 --LANGUAGE C IMMUTABLE STRICT;
 
-CREATE FUNCTION encstring_enc(cstring)
-RETURNS encstring
+CREATE FUNCTION pg_enc_text_encrypt(cstring)
+RETURNS enc_text
 AS '$libdir/encdb'
 LANGUAGE C IMMUTABLE STRICT;
 
-CREATE FUNCTION encstring_dec(encstring)
+CREATE FUNCTION pg_enc_text_decrypt(enc_text)
 RETURNS cstring
 AS '$libdir/encdb'
 LANGUAGE C IMMUTABLE STRICT;
 
 
---CREATE OR REPLACE FUNCTION encstring_recv(internal)
---RETURNS encstring
+--CREATE OR REPLACE FUNCTION pg_enc_text_recv(internal)
+--RETURNS enc_text
 --AS '$libdir/encdb'
 --LANGUAGE C IMMUTABLE STRICT;
 
---CREATE OR REPLACE FUNCTION encstring_send(encstring)
+--CREATE OR REPLACE FUNCTION pg_enc_text_send(enc_text)
 --RETURNS bytea
 --AS '$libdir/encdb'
 --LANGUAGE C IMMUTABLE STRICT;
 
-CREATE TYPE encstring (
-    INPUT          = encstring_in,
-    OUTPUT         = encstring_out,
---    RECEIVE        = encstring_recv,
---    SEND         = encstring_send,
+CREATE TYPE enc_text (
+    INPUT          = pg_enc_text_in,
+    OUTPUT         = pg_enc_text_out,
+--    RECEIVE        = pg_enc_text_recv,
+--    SEND         = pg_enc_text_send,
 --      LIKE	   = text, 
     INTERNALLENGTH = 128,
 --    CATEGORY = 'S',
@@ -434,12 +403,12 @@ CREATE TYPE encstring (
     ALIGNMENT      = int4,
     STORAGE        = PLAIN
 );
-COMMENT ON TYPE encstring IS 'ENCRYPTED STRING';
+COMMENT ON TYPE enc_text IS 'ENCRYPTED STRING';
 
 CREATE OPERATOR = (
-  LEFTARG = encstring,
-  RIGHTARG = encstring,
-  PROCEDURE = encstring_eq,
+  LEFTARG = enc_text,
+  RIGHTARG = enc_text,
+  PROCEDURE = pg_enc_text_eq,
   COMMUTATOR = '=',
   NEGATOR = '<>',
   RESTRICT = eqsel,
@@ -448,18 +417,18 @@ CREATE OPERATOR = (
 );
 
 CREATE OPERATOR <> (
-  LEFTARG = encstring,
-  RIGHTARG = encstring,
-  PROCEDURE = encstring_ne,
+  LEFTARG = enc_text,
+  RIGHTARG = enc_text,
+  PROCEDURE = pg_enc_text_ne,
   COMMUTATOR = '<>',
   NEGATOR = '=',
   RESTRICT = neqsel,
   JOIN = neqjoinsel
 );
 CREATE OPERATOR < (
-  LEFTARG = encstring,
-  RIGHTARG = encstring,
-  PROCEDURE = encstring_lt,
+  LEFTARG = enc_text,
+  RIGHTARG = enc_text,
+  PROCEDURE = pg_enc_text_lt,
   COMMUTATOR = > ,
   NEGATOR = >= ,
   RESTRICT = scalarltsel,
@@ -467,9 +436,9 @@ CREATE OPERATOR < (
 );
 
 CREATE OPERATOR <= (
-  LEFTARG = encstring,
-  RIGHTARG = encstring,
-  PROCEDURE = encstring_le,
+  LEFTARG = enc_text,
+  RIGHTARG = enc_text,
+  PROCEDURE = pg_enc_text_le,
   COMMUTATOR = >= ,
   NEGATOR = > ,
   RESTRICT = scalarltsel,
@@ -477,9 +446,9 @@ CREATE OPERATOR <= (
 );
 
 CREATE OPERATOR > (
-  LEFTARG = encstring,
-  RIGHTARG = encstring,
-  PROCEDURE = encstring_gt,
+  LEFTARG = enc_text,
+  RIGHTARG = enc_text,
+  PROCEDURE = pg_enc_text_gt,
   COMMUTATOR = < ,
   NEGATOR = <= ,
   RESTRICT = scalargtsel,
@@ -487,9 +456,9 @@ CREATE OPERATOR > (
 );
 
 CREATE OPERATOR >= (
-  LEFTARG = encstring,
-  RIGHTARG = encstring,
-  PROCEDURE = encstring_ge,
+  LEFTARG = enc_text,
+  RIGHTARG = enc_text,
+  PROCEDURE = pg_enc_text_ge,
   COMMUTATOR = <= ,
   NEGATOR = < ,
   RESTRICT = scalargtsel,
@@ -497,144 +466,145 @@ CREATE OPERATOR >= (
 );
 
 CREATE OPERATOR || (
-  LEFTARG = encstring,
-  RIGHTARG = encstring,
-  PROCEDURE = encstring_concat);
+  LEFTARG = enc_text,
+  RIGHTARG = enc_text,
+  PROCEDURE = pg_enc_text_concatenate);
 
 CREATE OPERATOR ~~ (
-  LEFTARG = encstring,
-  RIGHTARG = encstring,
-  PROCEDURE = encstring_like
+  LEFTARG = enc_text,
+  RIGHTARG = enc_text,
+  PROCEDURE = pg_enc_text_like
 );
 
-CREATE OPERATOR CLASS btree_encstring_ops
-DEFAULT FOR TYPE encstring USING btree
+CREATE OPERATOR CLASS btree_pg_enc_text_ops
+DEFAULT FOR TYPE enc_text USING btree
 AS
         OPERATOR        1       <  ,
         OPERATOR        2       <= ,
         OPERATOR        3       =  ,
         OPERATOR        4       >= ,
         OPERATOR        5       >  ,
-        FUNCTION        1       encstring_cmp(encstring, encstring);
+        FUNCTION        1       pg_enc_text_cmp(enc_text, enc_text);
 
 
 
-CREATE OR REPLACE FUNCTION encstring(varchar)
-	RETURNS encstring
-    AS '$libdir/encdb', 'varchar_to_encstring'
+CREATE OR REPLACE FUNCTION enc_text(varchar)
+	RETURNS enc_text
+    AS '$libdir/encdb', 'varchar_to_enc_text'
 	LANGUAGE C STRICT IMMUTABLE;
+	
+CREATE CAST (varchar AS enc_text) WITH FUNCTION enc_text(varchar) AS ASSIGNMENT;
 
-CREATE CAST (varchar AS encstring) WITH FUNCTION encstring(varchar);
 --------------------------------------------------------------------------------
 --ENCRYPTED FLOAT4 TYPE (randomized)
 --------------------------------------------------------------------------------
-CREATE OR REPLACE FUNCTION encfloatin(cstring)
-RETURNS encfloat
+CREATE OR REPLACE FUNCTION pg_enc_float4_in(cstring)
+RETURNS enc_float4
 AS '$libdir/encdb'
 LANGUAGE C IMMUTABLE STRICT;
 
-CREATE OR REPLACE FUNCTION encfloatout(encfloat)
+CREATE OR REPLACE FUNCTION pg_enc_float4_out(enc_float4)
 RETURNS cstring
 AS '$libdir/encdb'
 LANGUAGE C IMMUTABLE STRICT;
 
-CREATE TYPE encfloat (
-    INPUT          = encfloatin,
-    OUTPUT         = encfloatout,
+CREATE TYPE enc_float4 (
+    INPUT          = pg_enc_float4_in,
+    OUTPUT         = pg_enc_float4_out,
     INTERNALLENGTH = 45,
     ALIGNMENT      = int4,
     STORAGE        = PLAIN
 );
 
-CREATE FUNCTION encfloat_enc(float4)
-RETURNS encfloat
+CREATE FUNCTION pg_enc_float4_encrypt(float4)
+RETURNS enc_float4
 AS '$libdir/encdb'
 LANGUAGE C IMMUTABLE STRICT;
 
-CREATE FUNCTION encfloat_dec(encfloat)
+CREATE FUNCTION pg_enc_float4_decrypt(enc_float4)
 RETURNS float4
 AS '$libdir/encdb'
 LANGUAGE C IMMUTABLE STRICT;
 
-CREATE FUNCTION encfloat_eq(encfloat, encfloat)
+CREATE FUNCTION pg_enc_float4_eq(enc_float4, enc_float4)
 RETURNS boolean 
 AS '$libdir/encdb'
 LANGUAGE C IMMUTABLE STRICT;
 
-CREATE FUNCTION encfloat_ne(encfloat, encfloat)
+CREATE FUNCTION pg_enc_float4_ne(enc_float4, enc_float4)
 RETURNS boolean 
 AS '$libdir/encdb'
 LANGUAGE C IMMUTABLE STRICT;
 
-CREATE FUNCTION encfloat_lt(encfloat, encfloat)
+CREATE FUNCTION pg_enc_float4_lt(enc_float4, enc_float4)
 RETURNS boolean 
 AS '$libdir/encdb'
 LANGUAGE C IMMUTABLE STRICT;
 
-CREATE FUNCTION encfloat_le(encfloat, encfloat)
+CREATE FUNCTION pg_enc_float4_le(enc_float4, enc_float4)
 RETURNS boolean 
 AS '$libdir/encdb'
 LANGUAGE C IMMUTABLE STRICT;
 
-CREATE FUNCTION encfloat_gt(encfloat, encfloat)
+CREATE FUNCTION pg_enc_float4_gt(enc_float4, enc_float4)
 RETURNS boolean 
 AS '$libdir/encdb'
 LANGUAGE C IMMUTABLE STRICT;
 
-CREATE FUNCTION encfloat_ge(encfloat, encfloat)
+CREATE FUNCTION pg_enc_float4_ge(enc_float4, enc_float4)
 RETURNS boolean 
 AS '$libdir/encdb'
 LANGUAGE C IMMUTABLE STRICT;
 
-CREATE FUNCTION encfloat_cmp(encfloat, encfloat)
+CREATE FUNCTION pg_enc_float4_cmp(enc_float4, enc_float4)
 RETURNS integer 
 AS '$libdir/encdb'
 LANGUAGE C IMMUTABLE STRICT;
 
-CREATE FUNCTION encfloat_add(encfloat, encfloat)
-RETURNS encfloat
+CREATE FUNCTION pg_enc_float4_add(enc_float4, enc_float4)
+RETURNS enc_float4
 AS '$libdir/encdb'
 LANGUAGE C IMMUTABLE STRICT;
 
-CREATE FUNCTION encfloat_subs(encfloat, encfloat)
-RETURNS encfloat
+CREATE FUNCTION pg_enc_float4_subs(enc_float4, enc_float4)
+RETURNS enc_float4
 AS '$libdir/encdb'
 LANGUAGE C IMMUTABLE STRICT;
 
-CREATE FUNCTION encfloat_mult(encfloat, encfloat)
-RETURNS encfloat
+CREATE FUNCTION pg_enc_float4_mult(enc_float4, enc_float4)
+RETURNS enc_float4
 AS '$libdir/encdb'
 LANGUAGE C IMMUTABLE STRICT;
 
-CREATE FUNCTION encfloat_div(encfloat, encfloat)
-RETURNS encfloat
+CREATE FUNCTION pg_enc_float4_div(enc_float4, enc_float4)
+RETURNS enc_float4
 AS '$libdir/encdb'
 LANGUAGE C IMMUTABLE STRICT;
 
-CREATE FUNCTION encfloat_exp(encfloat, encfloat)
-RETURNS encfloat
+CREATE FUNCTION pg_enc_float4_exp(enc_float4, enc_float4)
+RETURNS enc_float4
 AS '$libdir/encdb'
 LANGUAGE C IMMUTABLE STRICT;
 
-CREATE FUNCTION encfloat_addfinal(encfloat[])
-RETURNS encfloat
+CREATE FUNCTION pg_enc_float4_addfinal(enc_float4[])
+RETURNS enc_float4
 AS '$libdir/encdb'
 LANGUAGE C IMMUTABLE STRICT;
 
-CREATE FUNCTION encfloat_avgfinal(encfloat[])
-RETURNS encfloat
+CREATE FUNCTION pg_enc_float4_avgfinal(enc_float4[])
+RETURNS enc_float4
 AS '$libdir/encdb'
 LANGUAGE C IMMUTABLE STRICT;
 
-CREATE FUNCTION encfloat_mod(encfloat, encfloat)
-RETURNS encfloat
+CREATE FUNCTION pg_enc_float4_mod(enc_float4, enc_float4)
+RETURNS enc_float4
 AS '$libdir/encdb'
 LANGUAGE C IMMUTABLE STRICT;
 
 CREATE OPERATOR = (
-  LEFTARG = encfloat,
-  RIGHTARG = encfloat,
-  PROCEDURE = encfloat_eq,
+  LEFTARG = enc_float4,
+  RIGHTARG = enc_float4,
+  PROCEDURE = pg_enc_float4_eq,
   COMMUTATOR = '=',
   NEGATOR = '<>',
   RESTRICT = eqsel,
@@ -643,18 +613,18 @@ CREATE OPERATOR = (
 );
 
 CREATE OPERATOR <> (
-  LEFTARG = encfloat,
-  RIGHTARG = encfloat,
-  PROCEDURE = encfloat_ne,
+  LEFTARG = enc_float4,
+  RIGHTARG = enc_float4,
+  PROCEDURE = pg_enc_float4_ne,
   COMMUTATOR = '<>',
   NEGATOR = '=',
   RESTRICT = neqsel,
   JOIN = neqjoinsel
 );
 CREATE OPERATOR < (
-  LEFTARG = encfloat,
-  RIGHTARG = encfloat,
-  PROCEDURE = encfloat_lt,
+  LEFTARG = enc_float4,
+  RIGHTARG = enc_float4,
+  PROCEDURE = pg_enc_float4_lt,
   COMMUTATOR = > ,
   NEGATOR = >= ,
   RESTRICT = scalarltsel,
@@ -662,9 +632,9 @@ CREATE OPERATOR < (
 );
 
 CREATE OPERATOR <= (
-  LEFTARG = encfloat,
-  RIGHTARG = encfloat,
-  PROCEDURE = encfloat_le,
+  LEFTARG = enc_float4,
+  RIGHTARG = enc_float4,
+  PROCEDURE = pg_enc_float4_le,
   COMMUTATOR = >= ,
   NEGATOR = > ,
   RESTRICT = scalarltsel,
@@ -672,9 +642,9 @@ CREATE OPERATOR <= (
 );
 
 CREATE OPERATOR > (
-  LEFTARG = encfloat,
-  RIGHTARG = encfloat,
-  PROCEDURE = encfloat_gt,
+  LEFTARG = enc_float4,
+  RIGHTARG = enc_float4,
+  PROCEDURE = pg_enc_float4_gt,
   COMMUTATOR = < ,
   NEGATOR = <= ,
   RESTRICT = scalargtsel,
@@ -682,9 +652,9 @@ CREATE OPERATOR > (
 );
 
 CREATE OPERATOR >= (
-  LEFTARG = encfloat,
-  RIGHTARG = encfloat,
-  PROCEDURE = encfloat_ge,
+  LEFTARG = enc_float4,
+  RIGHTARG = enc_float4,
+  PROCEDURE = pg_enc_float4_ge,
   COMMUTATOR = <= ,
   NEGATOR = < ,
   RESTRICT = scalargtsel,
@@ -692,174 +662,173 @@ CREATE OPERATOR >= (
 );
 
 CREATE OPERATOR + (
-  LEFTARG = encfloat,
-  RIGHTARG = encfloat,
-  PROCEDURE = encfloat_add
+  LEFTARG = enc_float4,
+  RIGHTARG = enc_float4,
+  PROCEDURE = pg_enc_float4_add
 );
 
 CREATE OPERATOR - (
-  LEFTARG = encfloat,
-  RIGHTARG = encfloat,
-  PROCEDURE = encfloat_subs
+  LEFTARG = enc_float4,
+  RIGHTARG = enc_float4,
+  PROCEDURE = pg_enc_float4_subs
 );
 
 CREATE OPERATOR * (
-  LEFTARG = encfloat,
-  RIGHTARG = encfloat,
-  PROCEDURE = encfloat_mult
+  LEFTARG = enc_float4,
+  RIGHTARG = enc_float4,
+  PROCEDURE = pg_enc_float4_mult
 );
 
 CREATE OPERATOR / (
-  LEFTARG = encfloat,
-  RIGHTARG = encfloat,
-  PROCEDURE = encfloat_div
+  LEFTARG = enc_float4,
+  RIGHTARG = enc_float4,
+  PROCEDURE = pg_enc_float4_div
 );
 
 CREATE OPERATOR % (
-  LEFTARG = encfloat,
-  RIGHTARG = encfloat,
-  PROCEDURE = encfloat_mod
+  LEFTARG = enc_float4,
+  RIGHTARG = enc_float4,
+  PROCEDURE = pg_enc_float4_mod
 );
 
 CREATE OPERATOR ^ (
-  LEFTARG = encfloat,
-  RIGHTARG = encfloat,
-  PROCEDURE = encfloat_exp
+  LEFTARG = enc_float4,
+  RIGHTARG = enc_float4,
+  PROCEDURE = pg_enc_float4_exp
 );
 
 
-CREATE OPERATOR CLASS btree_encfloat_ops
-DEFAULT FOR TYPE encfloat USING btree
+CREATE OPERATOR CLASS btree_pg_enc_float4_ops
+DEFAULT FOR TYPE enc_float4 USING btree
 AS
         OPERATOR        1       <  ,
         OPERATOR        2       <= ,
         OPERATOR        3       =  ,
         OPERATOR        4       >= ,
         OPERATOR        5       >  ,
-        FUNCTION        1       encfloat_cmp(encfloat, encfloat);
+        FUNCTION        1       pg_enc_float4_cmp(enc_float4, enc_float4);
 
---CREATE AGGREGATE sum (encfloat)
+--CREATE AGGREGATE sum (enc_float4)
 --(
---   sfunc = encfloat_add,
---   stype = encfloat
+--   sfunc = pg_enc_float4_add,
+--   stype = enc_float4
 --);
 
-CREATE AGGREGATE sum (encfloat)
+CREATE AGGREGATE sum (enc_float4)
 (
    sfunc = array_append,
-   stype = encfloat[],   
-  finalfunc = encfloat_addfinal	
+   stype = enc_float4[],   
+  finalfunc = pg_enc_float4_addfinal	
 );
 
-CREATE AGGREGATE avg (encfloat)
+CREATE AGGREGATE avg (enc_float4)
 (
    sfunc = array_append,
-   stype = encfloat[],
-    finalfunc = encfloat_avgfinal
-	
+   stype = enc_float4[],
+   finalfunc = pg_enc_float4_avgfinal
 );
 
 
-CREATE OR REPLACE FUNCTION encfloat(float4)
-	RETURNS encfloat
-    AS '$libdir/encdb', 'float4_to_encfloat'
+CREATE OR REPLACE FUNCTION enc_float4(float4)
+	RETURNS enc_float4
+    AS '$libdir/encdb', 'float4_to_enc_float4'
 	LANGUAGE C STRICT IMMUTABLE;
 
-CREATE OR REPLACE FUNCTION encfloat(double precision)
-	RETURNS encfloat
-    AS '$libdir/encdb', 'double_to_encfloat'
+CREATE OR REPLACE FUNCTION enc_float4(double precision)
+	RETURNS enc_float4
+    AS '$libdir/encdb', 'double_to_enc_float4'
 	LANGUAGE C STRICT IMMUTABLE;
 
-CREATE OR REPLACE FUNCTION encfloat(numeric)
-	RETURNS encfloat
-    AS '$libdir/encdb', 'numeric_to_encfloat'
+CREATE OR REPLACE FUNCTION enc_float4(numeric)
+	RETURNS enc_float4
+    AS '$libdir/encdb', 'numeric_to_enc_float4'
 	LANGUAGE C STRICT IMMUTABLE;
 
-CREATE OR REPLACE FUNCTION encfloat(int8)
-	RETURNS encfloat
-    AS '$libdir/encdb', 'int8_to_encfloat'
+CREATE OR REPLACE FUNCTION enc_float4(int8)
+	RETURNS enc_float4
+    AS '$libdir/encdb', 'int8_to_enc_float4'
 	LANGUAGE C STRICT IMMUTABLE;
 
-CREATE OR REPLACE FUNCTION encfloat(int4)
-	RETURNS encfloat
-    AS '$libdir/encdb', 'int4_to_encfloat'
+CREATE OR REPLACE FUNCTION enc_float4(int4)
+	RETURNS enc_float4
+    AS '$libdir/encdb', 'int4_to_enc_float4'
 	LANGUAGE C STRICT IMMUTABLE;
 		
-CREATE CAST (float4 AS encfloat) WITH FUNCTION encfloat(float4) AS ASSIGNMENT;
-CREATE CAST (double precision AS encfloat) WITH FUNCTION encfloat(double precision) AS ASSIGNMENT;
-CREATE CAST (numeric AS encfloat) WITH FUNCTION encfloat(numeric) AS ASSIGNMENT;
-CREATE CAST (int8 AS encfloat) WITH FUNCTION encfloat(int8) AS ASSIGNMENT;
-CREATE CAST (int4 AS encfloat) WITH FUNCTION encfloat(int4) AS ASSIGNMENT;
+CREATE CAST (float4 AS enc_float4) WITH FUNCTION enc_float4(float4) AS ASSIGNMENT;
+CREATE CAST (double precision AS enc_float4) WITH FUNCTION enc_float4(double precision) AS ASSIGNMENT;
+CREATE CAST (numeric AS enc_float4) WITH FUNCTION enc_float4(numeric) AS ASSIGNMENT;
+CREATE CAST (int8 AS enc_float4) WITH FUNCTION enc_float4(int8) AS ASSIGNMENT;
+CREATE CAST (int4 AS enc_float4) WITH FUNCTION enc_float4(int4) AS ASSIGNMENT;
 --------------------------------------------------------------------------------
 --ENCRYPTED TIMESTAMP TYPE (randomized)
 --------------------------------------------------------------------------------
-CREATE OR REPLACE FUNCTION enctimestampin(cstring)
-RETURNS enctimestamp
+CREATE OR REPLACE FUNCTION pg_enc_timestamp_in(cstring)
+RETURNS enc_timestamp
 AS '$libdir/encdb'
 LANGUAGE C IMMUTABLE STRICT;
 
-CREATE OR REPLACE FUNCTION enctimestampout(enctimestamp)
+CREATE OR REPLACE FUNCTION pg_enc_timestamp_out(enc_timestamp)
 RETURNS cstring
 AS '$libdir/encdb'
 LANGUAGE C IMMUTABLE STRICT;
 
-CREATE TYPE enctimestamp (
-    INPUT          = enctimestampin,
-    OUTPUT         = enctimestampout,
+CREATE TYPE enc_timestamp (
+    INPUT          = pg_enc_timestamp_in,
+    OUTPUT         = pg_enc_timestamp_out,
     INTERNALLENGTH = 49,
     ALIGNMENT      = int4,
     STORAGE        = PLAIN
 );
 
-CREATE FUNCTION enctimestamp_enc(cstring)
-RETURNS enctimestamp
+CREATE FUNCTION pg_enc_timestamp_encrypt(cstring)
+RETURNS enc_timestamp
 AS '$libdir/encdb'
 LANGUAGE C IMMUTABLE STRICT;
 
-CREATE FUNCTION enctimestamp_dec(enctimestamp)
+CREATE FUNCTION pg_enc_timestamp_decrypt(enc_timestamp)
 RETURNS cstring
 AS '$libdir/encdb'
 LANGUAGE C IMMUTABLE STRICT;
 
-CREATE FUNCTION enctimestamp_eq(enctimestamp, enctimestamp)
+CREATE FUNCTION pg_enc_timestamp_eq(enc_timestamp, enc_timestamp)
 RETURNS boolean 
 AS '$libdir/encdb'
 LANGUAGE C IMMUTABLE STRICT;
 
-CREATE FUNCTION enctimestamp_ne(enctimestamp, enctimestamp)
+CREATE FUNCTION pg_enc_timestamp_ne(enc_timestamp, enc_timestamp)
 RETURNS boolean 
 AS '$libdir/encdb'
 LANGUAGE C IMMUTABLE STRICT;
 
-CREATE FUNCTION enctimestamp_lt(enctimestamp, enctimestamp)
+CREATE FUNCTION pg_enc_timestamp_lt(enc_timestamp, enc_timestamp)
 RETURNS boolean 
 AS '$libdir/encdb'
 LANGUAGE C IMMUTABLE STRICT;
 
-CREATE FUNCTION enctimestamp_le(enctimestamp, enctimestamp)
+CREATE FUNCTION pg_enc_timestamp_le(enc_timestamp, enc_timestamp)
 RETURNS boolean 
 AS '$libdir/encdb'
 LANGUAGE C IMMUTABLE STRICT;
 
-CREATE FUNCTION enctimestamp_gt(enctimestamp, enctimestamp)
+CREATE FUNCTION pg_enc_timestamp_gt(enc_timestamp, enc_timestamp)
 RETURNS boolean 
 AS '$libdir/encdb'
 LANGUAGE C IMMUTABLE STRICT;
 
-CREATE FUNCTION enctimestamp_ge(enctimestamp, enctimestamp)
+CREATE FUNCTION pg_enc_timestamp_ge(enc_timestamp, enc_timestamp)
 RETURNS boolean 
 AS '$libdir/encdb'
 LANGUAGE C IMMUTABLE STRICT;
 
-CREATE FUNCTION enctimestamp_cmp(enctimestamp, enctimestamp)
+CREATE FUNCTION pg_enc_timestamp_cmp(enc_timestamp, enc_timestamp)
 RETURNS integer 
 AS '$libdir/encdb'
 LANGUAGE C IMMUTABLE STRICT;
 
 CREATE OPERATOR = (
-  LEFTARG = enctimestamp,
-  RIGHTARG = enctimestamp,
-  PROCEDURE = enctimestamp_eq,
+  LEFTARG = enc_timestamp,
+  RIGHTARG = enc_timestamp,
+  PROCEDURE = pg_enc_timestamp_eq,
   COMMUTATOR = '=',
   NEGATOR = '<>',
   RESTRICT = eqsel,
@@ -868,18 +837,18 @@ CREATE OPERATOR = (
 );
 
 CREATE OPERATOR <> (
-  LEFTARG = enctimestamp,
-  RIGHTARG = enctimestamp,
-  PROCEDURE = enctimestamp_ne,
+  LEFTARG = enc_timestamp,
+  RIGHTARG = enc_timestamp,
+  PROCEDURE = pg_enc_timestamp_ne,
   COMMUTATOR = '<>',
   NEGATOR = '=',
   RESTRICT = neqsel,
   JOIN = neqjoinsel
 );
 CREATE OPERATOR < (
-  LEFTARG = enctimestamp,
-  RIGHTARG = enctimestamp,
-  PROCEDURE = enctimestamp_lt,
+  LEFTARG = enc_timestamp,
+  RIGHTARG = enc_timestamp,
+  PROCEDURE = pg_enc_timestamp_lt,
   COMMUTATOR = > ,
   NEGATOR = >= ,
   RESTRICT = scalarltsel,
@@ -887,9 +856,9 @@ CREATE OPERATOR < (
 );
 
 CREATE OPERATOR <= (
-  LEFTARG = enctimestamp,
-  RIGHTARG = enctimestamp,
-  PROCEDURE = enctimestamp_le,
+  LEFTARG = enc_timestamp,
+  RIGHTARG = enc_timestamp,
+  PROCEDURE = pg_enc_timestamp_le,
   COMMUTATOR = >= ,
   NEGATOR = > ,
   RESTRICT = scalarltsel,
@@ -897,9 +866,9 @@ CREATE OPERATOR <= (
 );
 
 CREATE OPERATOR > (
-  LEFTARG = enctimestamp,
-  RIGHTARG = enctimestamp,
-  PROCEDURE = enctimestamp_gt,
+  LEFTARG = enc_timestamp,
+  RIGHTARG = enc_timestamp,
+  PROCEDURE = pg_enc_timestamp_gt,
   COMMUTATOR = < ,
   NEGATOR = <= ,
   RESTRICT = scalargtsel,
@@ -907,29 +876,29 @@ CREATE OPERATOR > (
 );
 
 CREATE OPERATOR >= (
-  LEFTARG = enctimestamp,
-  RIGHTARG = enctimestamp,
-  PROCEDURE = enctimestamp_ge,
+  LEFTARG = enc_timestamp,
+  RIGHTARG = enc_timestamp,
+  PROCEDURE = pg_enc_timestamp_ge,
   COMMUTATOR = <= ,
   NEGATOR = < ,
   RESTRICT = scalargtsel,
   JOIN = scalargtjoinsel
 );
 
-CREATE OPERATOR CLASS btree_enctimestamp_ops
-DEFAULT FOR TYPE enctimestamp USING btree
+CREATE OPERATOR CLASS btree_enc_timestamp_ops
+DEFAULT FOR TYPE enc_timestamp USING btree
 AS
         OPERATOR        1       <  ,
         OPERATOR        2       <= ,
         OPERATOR        3       =  ,
         OPERATOR        4       >= ,
         OPERATOR        5       >  ,
-        FUNCTION        1       enctimestamp_cmp(enctimestamp, enctimestamp);
+        FUNCTION        1       pg_enc_timestamp_cmp(enc_timestamp, enc_timestamp);
 
 
-CREATE OR REPLACE FUNCTION enctimestamp(timestamp)
-	RETURNS enctimestamp
-    AS '$libdir/encdb', 'enctimestamp_enc'
+CREATE OR REPLACE FUNCTION enc_timestamp(timestamp)
+	RETURNS enc_timestamp
+    AS '$libdir/encdb', 'pg_enc_timestamp_encrypt'
 	LANGUAGE C STRICT IMMUTABLE;
 
-CREATE CAST (timestamp AS enctimestamp) WITH FUNCTION enctimestamp(timestamp) AS ASSIGNMENT;
+CREATE CAST (timestamp AS enc_timestamp) WITH FUNCTION enc_timestamp(timestamp) AS ASSIGNMENT;
