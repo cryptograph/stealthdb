@@ -42,7 +42,7 @@ StealthDB is a research project and is **not** suitable for production use.
 	select generate_key();
 	```
 
-3. Use encrypted datatypes (ex. enc_int4) in tables, queries and functions likewise native datatypes. See more information in the [manual](https://github.com/cryptograph/stealthdb/docs/user/README.md).
+3. Use encrypted datatypes (ex. enc_int4) in tables, queries and functions likewise native datatypes. See more information in the [manual](https://github.com/cryptograph/stealthdb/blob/master/docs/user/README.md).
 
 
 ## Examples
