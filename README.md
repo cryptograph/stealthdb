@@ -60,4 +60,3 @@ StealthDB is a research project and is **not** suitable for production use.
 	select 1::enc_int4 > 2::enc_int4;
 	select 10.5::enc_float4 / 2.2::enc_float4;
 	```
-
