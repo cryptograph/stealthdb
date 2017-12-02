@@ -37,7 +37,7 @@ int init()
 //void *enclaveThread(void *) {
 void enclaveThread() {
 	int resp = 0;
-	int ans = enclaveProcess(global_eid, &resp, inQueue);
+	int ans = enclave_process(global_eid, &resp, inQueue);
 
 }
 int initMultithreading()
@@ -81,7 +81,7 @@ int generateKey()
 	int updated = 0;
 	int resp, resp_enclave, flength ;
 	uint8_t *sealed_key_b = new uint8_t[SEALED_KEY_LENGTH];
-	//std::array<BYTE, SEALED_KEY_LENGTH> sealed_key;
+	request* req = new request;
 
 	std::fstream data_file;
 	data_file.open(DATA_FILENAME, std::fstream::in | std::fstream::out | std::fstream::binary);
@@ -94,17 +94,35 @@ int generateKey()
 			return 0;
 
 		else {
-			resp = generateKeyEnclave(global_eid, &resp_enclave, sealed_key_b, SEALED_KEY_LENGTH);
-			if(resp != SGX_SUCCESS)
-				return resp;
-			data_file.write((char *)sealed_key_b, SEALED_KEY_LENGTH);
+			req->ocall_index = CMD_KEY_GEN;
+			req->is_done = -1;
+			inQueue->enqueue(req);
+
+			while (true)
+			{
+				if (req->is_done == -1)
+				{
+					__asm__("pause");
+				}
+				else
+				{
+					spin_unlock(&req->is_done);
+					if(req->resp != SGX_SUCCESS)
+						return req->resp;
+					memcpy(sealed_key_b, req->buffer, SEALED_KEY_LENGTH);
+					break;
+				}
+			}
 		}
 	}
 	else
 		return NO_KEYS_STORAGE;
 
+
+	data_file.write((char *)sealed_key_b, SEALED_KEY_LENGTH);
 	data_file.close();
 	delete[] sealed_key_b;
+	delete req;
 
 	return (int)flength/SEALED_KEY_LENGTH;
 }
@@ -112,14 +130,18 @@ int generateKey()
 
 int loadKey(int item)
 {
+	int resp = ENCLAVE_IS_NOT_RUNNIG;
+
 	if (!status) {
-		int resp = initMultithreading();
+		resp = initMultithreading();
 	//	return resp;//IS_NOT_INITIALIZE;
 	}
 	sgx_launch_token_t token = {0};
 	int updated = 0;
-	int resp, resp_enclave;
+	int resp_enclave;
 	uint8_t sealed_key_b[SEALED_KEY_LENGTH];
+	request* req = new request;
+	int src_len = SEALED_KEY_LENGTH;
 	//std::array<BYTE, SEALED_KEY_LENGTH> sealed_key;
 
 	std::fstream data_file;
@@ -133,7 +155,30 @@ int loadKey(int item)
 
 		data_file.seekg (item*SEALED_KEY_LENGTH);
 		data_file.read((char *)sealed_key_b, SEALED_KEY_LENGTH);
-		resp = loadKeyEnclave(global_eid, &resp_enclave, sealed_key_b, SEALED_KEY_LENGTH);
+
+		req->ocall_index = CMD_LOAD_KEY;
+		req->is_done = -1;
+		memcpy(req->buffer, sealed_key_b, SEALED_KEY_LENGTH);
+
+		inQueue->enqueue(req);
+
+		//std::copy(&req->buffer[0], &req->buffer[SEALED_KEY_LENGTH], sealed_key_b);
+
+		while (true)
+			{
+				if (req->is_done == -1)
+				{
+					__asm__("pause");
+				}
+				else
+				{
+					resp = req->resp;
+					spin_unlock(&req->is_done);
+					break;
+				}
+			}
+
+		delete req;
 		if(resp != SGX_SUCCESS)
 			return resp;
 	}

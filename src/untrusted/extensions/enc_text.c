@@ -407,8 +407,8 @@ pg_enc_text_like(PG_FUNCTION_ARGS)
 		cmp = true;
 	else cmp = false;
 
-	pfree(pDst);
-	PG_RETURN_BOOL(cmp);*/
+	pfree(pDst);*/
+	PG_RETURN_BOOL(0); //To remove the compiler warning
 }
 
 

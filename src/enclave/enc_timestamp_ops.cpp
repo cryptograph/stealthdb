@@ -4,11 +4,10 @@
 #include "enclave/enclave.h"
 #include "enclave/enclave_t.h"  /* print_string */
 
-extern sgx_aes_ctr_128bit_key_t p_key;
-
-
 /* Compare two encrypted timestamps(int64 - 8 bytes) by aes_gcm algorithm
- @input: uint8_t array - encrypted source1
+ * @input:
+ * 		 sgx_aes_ctr_128bit_key_t key - pointer to the master key
+ * 		 uint8_t array - encrypted source1
 		 size_t - length of encrypted source1 (SGX_AESGCM_IV_SIZE + INT64_LENGTH + SGX_AESGCM_MAC_SIZE = 36)
 		 uint8_t array - encrypted source2
 		 size_t - length of encrypted source2 (SGX_AESGCM_IV_SIZE + INT64_LENGTH + SGX_AESGCM_MAC_SIZE = 36)
@@ -19,7 +18,7 @@ extern sgx_aes_ctr_128bit_key_t p_key;
  @return:
  * SGX_error, if there was an error during decryption
 */
-int enc_timestamp_cmp(uint8_t *src1, size_t src1_len, uint8_t *src2, size_t src2_len, uint8_t *result, size_t res_len) {
+int enc_timestamp_cmp(sgx_aes_ctr_128bit_key_t* key, uint8_t *src1, size_t src1_len, uint8_t *src2, size_t src2_len, uint8_t *result, size_t res_len) {
 
 	TIMESTAMP dectm1, dectm2;
 	int resp, cmp;
@@ -27,11 +26,11 @@ int enc_timestamp_cmp(uint8_t *src1, size_t src1_len, uint8_t *src2, size_t src2
 	uint8_t *src1_decrypted = (uint8_t *)malloc(TIMESTAMP_LENGTH);
 	uint8_t *src2_decrypted = (uint8_t *)malloc(TIMESTAMP_LENGTH);
 
-	resp = decrypt_bytes(src1, src1_len, src1_decrypted, TIMESTAMP_LENGTH);
+	resp = decrypt_bytes(key, src1, src1_len, src1_decrypted, TIMESTAMP_LENGTH);
 	if (resp != SGX_SUCCESS)
 		return resp;
 
-	resp = decrypt_bytes(src2, src2_len, src2_decrypted, TIMESTAMP_LENGTH);
+	resp = decrypt_bytes(key, src2, src2_len, src2_decrypted, TIMESTAMP_LENGTH);
 	if (resp != SGX_SUCCESS)
 		return resp;
 

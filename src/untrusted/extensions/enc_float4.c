@@ -35,7 +35,7 @@ pg_enc_float4_out(PG_FUNCTION_ARGS)
 		memcpy(&ans, pDst, FLOAT4_LENGTH);
 		sgxErrorHandler(resp);
 		sprintf(str, "%f", ans);
-		//ereport(INFO, (errmsg("auto decryption: DEC('%s') = %f", pSrc, ans)));
+		ereport(INFO, (errmsg("auto decryption: DEC('%s') = %f", pSrc, ans)));
 	}
 
 	pfree(pDst);

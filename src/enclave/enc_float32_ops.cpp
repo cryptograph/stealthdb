@@ -1,9 +1,9 @@
 #include "enclave/enclave.h"
 #include "enclave/enclave_t.h"  /* print_string */
-extern sgx_aes_ctr_128bit_key_t p_key;
 
 /* Compare two encrypted by aes_gcm algorithm float numbers
- @input: uint8_t array - encrypted src1
+ @input: sgx_aes_ctr_128bit_key_t key - pointer to the master key
+		 uint8_t array - encrypted src1
 		 size_t - length of encrypted src1 (SGX_AESGCM_IV_SIZE + INT_LENGTH + SGX_AESGCM_MAC_SIZE = 32)
 		 uint8_t array - encrypted src2
 		 size_t - length of encrypted src2 (SGX_AESGCM_IV_SIZE + INT_LENGTH + SGX_AESGCM_MAC_SIZE = 32)
@@ -13,7 +13,7 @@ extern sgx_aes_ctr_128bit_key_t p_key;
  @return:
  * SGX_error, if there was an error during decryption 
 */
-int enc_float32_cmp(uint8_t *src1, size_t src1_len, uint8_t *src2, size_t src2_len, uint8_t *result, size_t res_len) {
+int enc_float32_cmp(sgx_aes_ctr_128bit_key_t*  key, uint8_t *src1, size_t src1_len, uint8_t *src2, size_t src2_len, uint8_t *result, size_t res_len) {
 
 	float decfloat1, decfloat2;
 	int resp;
@@ -22,11 +22,11 @@ int enc_float32_cmp(uint8_t *src1, size_t src1_len, uint8_t *src2, size_t src2_l
     uint8_t *pSrc1_decrypted = (uint8_t *)malloc(FLOAT4_LENGTH);
     uint8_t *pSrc2_decrypted = (uint8_t *)malloc(FLOAT4_LENGTH);
 
-	resp = decrypt_bytes(src1, src1_len, pSrc1_decrypted, FLOAT4_LENGTH);
+	resp = decrypt_bytes(key, src1, src1_len, pSrc1_decrypted, FLOAT4_LENGTH);
 	if (resp != SGX_SUCCESS)
 		return resp;
 
-	resp = decrypt_bytes(src2, src2_len, pSrc2_decrypted, FLOAT4_LENGTH);
+	resp = decrypt_bytes(key, src2, src2_len, pSrc2_decrypted, FLOAT4_LENGTH);
 	if (resp != SGX_SUCCESS)
 		return resp;
 	
@@ -49,7 +49,8 @@ int enc_float32_cmp(uint8_t *src1, size_t src1_len, uint8_t *src2, size_t src2_l
 }
 
 /* Sum of two encrypted by aes_gcm float numbers
- @input: uint8_t array - encrypted src1
+ @input: sgx_aes_ctr_128bit_key_t key - pointer to the master key
+		 uint8_t array - encrypted src1
 		 size_t - length of encrypted src1 (SGX_AESGCM_IV_SIZE + INT_LENGTH + SGX_AESGCM_MAC_SIZE = 32)
 		 uint8_t array - encrypted src2
 		 size_t - length of encrypted src2 (SGX_AESGCM_IV_SIZE + INT_LENGTH + SGX_AESGCM_MAC_SIZE = 32)
@@ -59,7 +60,7 @@ int enc_float32_cmp(uint8_t *src1, size_t src1_len, uint8_t *src2, size_t src2_l
 	* SGX_error, if there was an error during encryption/decryption 
 	0, otherwise
 */
-int enc_float32_add (uint8_t *pSrc1, size_t src1_len, uint8_t *pSrc2, size_t src2_len, uint8_t *pDst, size_t dst_len){
+int enc_float32_add (sgx_aes_ctr_128bit_key_t*  key, uint8_t *pSrc1, size_t src1_len, uint8_t *pSrc2, size_t src2_len, uint8_t *pDst, size_t dst_len){
 
 	float decfloat1, decfloat2, decfloat3;
 	int resp;
@@ -68,11 +69,11 @@ int enc_float32_add (uint8_t *pSrc1, size_t src1_len, uint8_t *pSrc2, size_t src
     uint8_t *pSrc2_decrypted = (uint8_t *)malloc(FLOAT4_LENGTH);
     uint8_t *pDst_decrypted = (uint8_t *)malloc(FLOAT4_LENGTH);
 
-	resp = decrypt_bytes(pSrc1, src1_len, pSrc1_decrypted, FLOAT4_LENGTH);
+	resp = decrypt_bytes(key, pSrc1, src1_len, pSrc1_decrypted, FLOAT4_LENGTH);
 	if (resp != SGX_SUCCESS)
 		return resp;
 	
-	resp = decrypt_bytes(pSrc2, src2_len, pSrc2_decrypted, FLOAT4_LENGTH);
+	resp = decrypt_bytes(key, pSrc2, src2_len, pSrc2_decrypted, FLOAT4_LENGTH);
 	if (resp != SGX_SUCCESS)
 		return resp;
 		
@@ -94,7 +95,7 @@ int enc_float32_add (uint8_t *pSrc1, size_t src1_len, uint8_t *pSrc2, size_t src
 
 	memcpy(pDst_decrypted, &decfloat3, FLOAT4_LENGTH);
 
-	resp = encrypt_bytes(pDst_decrypted, FLOAT4_LENGTH, pDst, dst_len);
+	resp = encrypt_bytes(key, pDst_decrypted, FLOAT4_LENGTH, pDst, dst_len);
 
 	memset_s(pSrc1_decrypted, FLOAT4_LENGTH, 0, FLOAT4_LENGTH);
 	memset_s(pSrc2_decrypted, FLOAT4_LENGTH, 0, FLOAT4_LENGTH);
@@ -112,7 +113,8 @@ int enc_float32_add (uint8_t *pSrc1, size_t src1_len, uint8_t *pSrc2, size_t src
 }
 
 /* Substraction of two encrypted by aes_gcm float numbers
- @input: uint8_t array - encrypted src1
+ @input: sgx_aes_ctr_128bit_key_t key - pointer to the master key
+		 uint8_t array - encrypted src1
 		 size_t - length of encrypted src1 (SGX_AESGCM_IV_SIZE + INT_LENGTH + SGX_AESGCM_MAC_SIZE = 32)
 		 uint8_t array - encrypted src2
 		 size_t - length of encrypted src2 (SGX_AESGCM_IV_SIZE + INT_LENGTH + SGX_AESGCM_MAC_SIZE = 32)
@@ -122,7 +124,7 @@ int enc_float32_add (uint8_t *pSrc1, size_t src1_len, uint8_t *pSrc2, size_t src
 	* SGX_error, if there was an error during encryption/decryption 
 	0, otherwise
 */
-int enc_float32_sub (uint8_t *pSrc1, size_t src1_len, uint8_t *pSrc2, size_t src2_len, uint8_t *pDst, size_t dst_len){
+int enc_float32_sub (sgx_aes_ctr_128bit_key_t*  key, uint8_t *pSrc1, size_t src1_len, uint8_t *pSrc2, size_t src2_len, uint8_t *pDst, size_t dst_len){
 
 	float decfloat1, decfloat2, decfloat3;
 	int resp;
@@ -131,11 +133,11 @@ int enc_float32_sub (uint8_t *pSrc1, size_t src1_len, uint8_t *pSrc2, size_t src
     uint8_t *pSrc2_decrypted = (uint8_t *)malloc(FLOAT4_LENGTH);
     uint8_t *pDst_decrypted = (uint8_t *)malloc(FLOAT4_LENGTH);
 
-	resp = decrypt_bytes(pSrc1, src1_len, pSrc1_decrypted, FLOAT4_LENGTH);
+	resp = decrypt_bytes(key, pSrc1, src1_len, pSrc1_decrypted, FLOAT4_LENGTH);
 	if (resp != SGX_SUCCESS)
 		return resp;
 	
-	resp = decrypt_bytes(pSrc2, src2_len, pSrc2_decrypted, FLOAT4_LENGTH);
+	resp = decrypt_bytes(key, pSrc2, src2_len, pSrc2_decrypted, FLOAT4_LENGTH);
 	if (resp != SGX_SUCCESS)
 		return resp;
 		
@@ -157,7 +159,7 @@ int enc_float32_sub (uint8_t *pSrc1, size_t src1_len, uint8_t *pSrc2, size_t src
 
 	memcpy(pDst_decrypted, &decfloat3, FLOAT4_LENGTH);
 
-	resp = encrypt_bytes(pDst_decrypted, FLOAT4_LENGTH, pDst, dst_len);
+	resp = encrypt_bytes(key, pDst_decrypted, FLOAT4_LENGTH, pDst, dst_len);
 
 	memset_s(pSrc1_decrypted, FLOAT4_LENGTH, 0, FLOAT4_LENGTH);
 	memset_s(pSrc2_decrypted, FLOAT4_LENGTH, 0, FLOAT4_LENGTH);
@@ -175,7 +177,8 @@ int enc_float32_sub (uint8_t *pSrc1, size_t src1_len, uint8_t *pSrc2, size_t src
 }
 
 /* Multiplication of two encrypted by aes_gcm float numbers
- @input: uint8_t array - encrypted src1
+ @input: sgx_aes_ctr_128bit_key_t key - pointer to the master key
+		 uint8_t array - encrypted src1
 		 size_t - length of encrypted src1 (SGX_AESGCM_IV_SIZE + INT_LENGTH + SGX_AESGCM_MAC_SIZE = 32)
 		 uint8_t array - encrypted src2
 		 size_t - length of encrypted src2 (SGX_AESGCM_IV_SIZE + INT_LENGTH + SGX_AESGCM_MAC_SIZE = 32)
@@ -185,7 +188,7 @@ int enc_float32_sub (uint8_t *pSrc1, size_t src1_len, uint8_t *pSrc2, size_t src
 	* SGX_error, if there was an error during encryption/decryption 
 	0, otherwise
 */
-int enc_float32_mult (uint8_t *pSrc1, size_t src1_len, uint8_t *pSrc2, size_t src2_len, uint8_t *pDst, size_t dst_len){
+int enc_float32_mult (sgx_aes_ctr_128bit_key_t*  key, uint8_t *pSrc1, size_t src1_len, uint8_t *pSrc2, size_t src2_len, uint8_t *pDst, size_t dst_len){
 
 	float decfloat1, decfloat2, decfloat3;
 	int resp;
@@ -194,11 +197,11 @@ int enc_float32_mult (uint8_t *pSrc1, size_t src1_len, uint8_t *pSrc2, size_t sr
     uint8_t *pSrc2_decrypted = (uint8_t *)malloc(FLOAT4_LENGTH);
     uint8_t *pDst_decrypted = (uint8_t *)malloc(FLOAT4_LENGTH);
 
-	resp = decrypt_bytes(pSrc1, src1_len, pSrc1_decrypted, FLOAT4_LENGTH);
+	resp = decrypt_bytes(key, pSrc1, src1_len, pSrc1_decrypted, FLOAT4_LENGTH);
 	if (resp != SGX_SUCCESS)
 		return resp;
 	
-	resp = decrypt_bytes(pSrc2, src2_len, pSrc2_decrypted, FLOAT4_LENGTH);
+	resp = decrypt_bytes(key, pSrc2, src2_len, pSrc2_decrypted, FLOAT4_LENGTH);
 	if (resp != SGX_SUCCESS)
 		return resp;
 		
@@ -210,7 +213,7 @@ int enc_float32_mult (uint8_t *pSrc1, size_t src1_len, uint8_t *pSrc2, size_t sr
 
 	memcpy(pDst_decrypted, &decfloat3, FLOAT4_LENGTH);
 
-	resp = encrypt_bytes(pDst_decrypted, FLOAT4_LENGTH, pDst, dst_len);
+	resp = encrypt_bytes(key, pDst_decrypted, FLOAT4_LENGTH, pDst, dst_len);
 
 	memset_s(pSrc1_decrypted, FLOAT4_LENGTH, 0, FLOAT4_LENGTH);
 	memset_s(pSrc2_decrypted, FLOAT4_LENGTH, 0, FLOAT4_LENGTH);
@@ -229,7 +232,8 @@ int enc_float32_mult (uint8_t *pSrc1, size_t src1_len, uint8_t *pSrc2, size_t sr
 
 
 /* Power operation of two encrypted by aes_gcm float numbers
- @input: uint8_t array - encrypted float base
+ @input: sgx_aes_ctr_128bit_key_t key - pointer to the master key
+	     uint8_t array - encrypted float base
 		 size_t - length of encrypted base (SGX_AESGCM_IV_SIZE + INT_LENGTH + SGX_AESGCM_MAC_SIZE = 32)
 		 uint8_t array - encrypted float exponent
 		 size_t - length of encrypted exponent (SGX_AESGCM_IV_SIZE + INT_LENGTH + SGX_AESGCM_MAC_SIZE = 32)
@@ -239,7 +243,7 @@ int enc_float32_mult (uint8_t *pSrc1, size_t src1_len, uint8_t *pSrc2, size_t sr
 	* SGX_error, if there was an error during encryption/decryption 
 	0, otherwise
 */
-int enc_float32_pow (uint8_t *pSrc1, size_t src1_len, uint8_t *pSrc2, size_t src2_len, uint8_t *pDst, size_t dst_len){
+int enc_float32_pow (sgx_aes_ctr_128bit_key_t*  key, uint8_t *pSrc1, size_t src1_len, uint8_t *pSrc2, size_t src2_len, uint8_t *pDst, size_t dst_len){
 
 	float decfloat1, decfloat2, decfloat3;
 	int resp;
@@ -248,11 +252,11 @@ int enc_float32_pow (uint8_t *pSrc1, size_t src1_len, uint8_t *pSrc2, size_t src
     uint8_t *pSrc2_decrypted = (uint8_t *)malloc(FLOAT4_LENGTH);
     uint8_t *pDst_decrypted = (uint8_t *)malloc(FLOAT4_LENGTH);
 
-	resp = decrypt_bytes(pSrc1, src1_len, pSrc1_decrypted, FLOAT4_LENGTH);
+	resp = decrypt_bytes(key, pSrc1, src1_len, pSrc1_decrypted, FLOAT4_LENGTH);
 	if (resp != SGX_SUCCESS)
 		return resp;
 	
-	resp = decrypt_bytes(pSrc2, src2_len, pSrc2_decrypted, FLOAT4_LENGTH);
+	resp = decrypt_bytes(key, pSrc2, src2_len, pSrc2_decrypted, FLOAT4_LENGTH);
 	if (resp != SGX_SUCCESS)
 		return resp;
 		
@@ -264,7 +268,7 @@ int enc_float32_pow (uint8_t *pSrc1, size_t src1_len, uint8_t *pSrc2, size_t src
 
 	memcpy(pDst_decrypted, &decfloat3, FLOAT4_LENGTH);
 
-	resp = encrypt_bytes(pDst_decrypted, FLOAT4_LENGTH, pDst, dst_len);
+	resp = encrypt_bytes(key, pDst_decrypted, FLOAT4_LENGTH, pDst, dst_len);
 
 	memset_s(pSrc1_decrypted, FLOAT4_LENGTH, 0, FLOAT4_LENGTH);
 	memset_s(pSrc2_decrypted, FLOAT4_LENGTH, 0, FLOAT4_LENGTH);
@@ -283,7 +287,8 @@ int enc_float32_pow (uint8_t *pSrc1, size_t src1_len, uint8_t *pSrc2, size_t src
 }
 		
 /* Division of two encrypted by aes_gcm float numbers
- @input: uint8_t array - encrypted src1
+ @input: sgx_aes_ctr_128bit_key_t key - pointer to the master key
+		 uint8_t array - encrypted src1
 		 size_t - length of encrypted src1 (SGX_AESGCM_IV_SIZE + INT_LENGTH + SGX_AESGCM_MAC_SIZE = 32)
 		 uint8_t array - encrypted src2
 		 size_t - length of encrypted src3 (SGX_AESGCM_IV_SIZE + INT_LENGTH + SGX_AESGCM_MAC_SIZE = 32)
@@ -293,7 +298,7 @@ int enc_float32_pow (uint8_t *pSrc1, size_t src1_len, uint8_t *pSrc2, size_t src
 	* SGX_error, if there was an error during encryption/decryption 
 	0, otherwise
 */
-int enc_float32_div (uint8_t *pSrc1, size_t src1_len, uint8_t *pSrc2, size_t src2_len, uint8_t *pDst, size_t dst_len){
+int enc_float32_div (sgx_aes_ctr_128bit_key_t*  key, uint8_t *pSrc1, size_t src1_len, uint8_t *pSrc2, size_t src2_len, uint8_t *pDst, size_t dst_len){
 
 	float decfloat1, decfloat2, decfloat3;
 	int resp;
@@ -302,11 +307,11 @@ int enc_float32_div (uint8_t *pSrc1, size_t src1_len, uint8_t *pSrc2, size_t src
     uint8_t *pSrc2_decrypted = (uint8_t *)malloc(FLOAT4_LENGTH);
     uint8_t *pDst_decrypted = (uint8_t *)malloc(FLOAT4_LENGTH);
 
-	resp = decrypt_bytes(pSrc1, src1_len, pSrc1_decrypted, FLOAT4_LENGTH);
+	resp = decrypt_bytes(key, pSrc1, src1_len, pSrc1_decrypted, FLOAT4_LENGTH);
 	if (resp != SGX_SUCCESS)
 		return resp;
 	
-	resp = decrypt_bytes(pSrc2, src2_len, pSrc2_decrypted, FLOAT4_LENGTH);
+	resp = decrypt_bytes(key, pSrc2, src2_len, pSrc2_decrypted, FLOAT4_LENGTH);
 	if (resp != SGX_SUCCESS)
 		return resp;
 		
@@ -319,7 +324,7 @@ int enc_float32_div (uint8_t *pSrc1, size_t src1_len, uint8_t *pSrc2, size_t src
 
 	memcpy(pDst_decrypted, &decfloat3, FLOAT4_LENGTH);
 
-	resp = encrypt_bytes(pDst_decrypted, FLOAT4_LENGTH, pDst, dst_len);
+	resp = encrypt_bytes(key, pDst_decrypted, FLOAT4_LENGTH, pDst, dst_len);
 
 	memset_s(pSrc1_decrypted, FLOAT4_LENGTH, 0, FLOAT4_LENGTH);
 	memset_s(pSrc2_decrypted, FLOAT4_LENGTH, 0, FLOAT4_LENGTH);
@@ -338,7 +343,8 @@ int enc_float32_div (uint8_t *pSrc1, size_t src1_len, uint8_t *pSrc2, size_t src
 }
 
 /* Module operation of two encrypted by aes_gcm float numbers
- @input: uint8_t array - encrypted src1
+ @input: sgx_aes_ctr_128bit_key_t key - pointer to the master key
+	     uint8_t array - encrypted src1
 		 size_t - length of encrypted src1 (SGX_AESGCM_IV_SIZE + INT_LENGTH + SGX_AESGCM_MAC_SIZE = 32)
 		 uint8_t array - encrypted module 
 		 size_t - length of encrypted module (SGX_AESGCM_IV_SIZE + INT_LENGTH + SGX_AESGCM_MAC_SIZE = 32)
@@ -348,7 +354,7 @@ int enc_float32_div (uint8_t *pSrc1, size_t src1_len, uint8_t *pSrc2, size_t src
 	* SGX_error, if there was an error during encryption/decryption 
 	0, otherwise
 */
-int enc_float32_mod (uint8_t *pSrc1, size_t src1_len, uint8_t *pSrc2, size_t src2_len, uint8_t *pDst, size_t dst_len){
+int enc_float32_mod (sgx_aes_ctr_128bit_key_t*  key, uint8_t *pSrc1, size_t src1_len, uint8_t *pSrc2, size_t src2_len, uint8_t *pDst, size_t dst_len){
 
 	float decfloat1, decfloat2, decfloat3;
 	int resp;
@@ -357,11 +363,11 @@ int enc_float32_mod (uint8_t *pSrc1, size_t src1_len, uint8_t *pSrc2, size_t src
     uint8_t *pSrc2_decrypted = (uint8_t *)malloc(FLOAT4_LENGTH);
     uint8_t *pDst_decrypted = (uint8_t *)malloc(FLOAT4_LENGTH);
 
-	resp = decrypt_bytes(pSrc1, src1_len, pSrc1_decrypted, FLOAT4_LENGTH);
+	resp = decrypt_bytes(key, pSrc1, src1_len, pSrc1_decrypted, FLOAT4_LENGTH);
 	if (resp != SGX_SUCCESS)
 		return resp;
 	
-	resp = decrypt_bytes(pSrc2, src2_len, pSrc2_decrypted, FLOAT4_LENGTH);
+	resp = decrypt_bytes(key, pSrc2, src2_len, pSrc2_decrypted, FLOAT4_LENGTH);
 	if (resp != SGX_SUCCESS)
 		return resp;
 		
@@ -373,7 +379,7 @@ int enc_float32_mod (uint8_t *pSrc1, size_t src1_len, uint8_t *pSrc2, size_t src
 
 	memcpy(pDst_decrypted, &decfloat3, FLOAT4_LENGTH);
 
-	resp = encrypt_bytes(pDst_decrypted, FLOAT4_LENGTH, pDst, dst_len);
+	resp = encrypt_bytes(key, pDst_decrypted, FLOAT4_LENGTH, pDst, dst_len);
 
 	memset_s(pSrc1_decrypted, FLOAT4_LENGTH, 0, FLOAT4_LENGTH);
 	memset_s(pSrc2_decrypted, FLOAT4_LENGTH, 0, FLOAT4_LENGTH);

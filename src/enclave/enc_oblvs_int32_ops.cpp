@@ -4,10 +4,9 @@
 #include "utils/oblvs_int32_ops.h"
 #include "utils/bytes.hpp"
 
-extern sgx_aes_ctr_128bit_key_t p_key;
-
 /* Compare two encrypted by aes_gcm algorithm integers
- @input: uint8_t array - encrypted integer1
+ @input: sgx_aes_ctr_128bit_key_t key - pointer to the master key
+		 uint8_t array - encrypted integer1
 		 size_t - length of encrypted integer1 (SGX_AESGCM_IV_SIZE + INT32_LENGTH + SGX_AESGCM_MAC_SIZE = 32)
 		 uint8_t array - encrypted integer2
 		 size_t - length of encrypted integer2 (SGX_AESGCM_IV_SIZE + INT32_LENGTH + SGX_AESGCM_MAC_SIZE = 32)
@@ -19,7 +18,7 @@ extern sgx_aes_ctr_128bit_key_t p_key;
  * SGX_error, if there was an error during decryption 
 */
 
-int enc_int32_cmp(uint8_t *int1, size_t int1_len, uint8_t *int2, size_t int2_len, uint8_t *result, size_t res_len) {
+int enc_int32_cmp(sgx_aes_ctr_128bit_key_t* key, uint8_t *int1, size_t int1_len, uint8_t *int2, size_t int2_len, uint8_t *result, size_t res_len) {
 	
 	int32_t src1_decrypted, src2_decrypted;
 	int resp, cmp;
@@ -27,11 +26,11 @@ int enc_int32_cmp(uint8_t *int1, size_t int1_len, uint8_t *int2, size_t int2_len
     uint8_t *pSrc1_decrypted = (uint8_t *)malloc(INT32_LENGTH);
     uint8_t *pSrc2_decrypted = (uint8_t *)malloc(INT32_LENGTH);
 
-	resp = decrypt_bytes(int1, int1_len, pSrc1_decrypted, INT32_LENGTH);
+	resp = decrypt_bytes(key, int1, int1_len, pSrc1_decrypted, INT32_LENGTH);
 	if (resp != SGX_SUCCESS)
 		return resp;
 	
-	resp = decrypt_bytes(int2, int2_len, pSrc2_decrypted, INT32_LENGTH);
+	resp = decrypt_bytes(key, int2, int2_len, pSrc2_decrypted, INT32_LENGTH);
 	if (resp != SGX_SUCCESS)
 		return resp;
 		
@@ -41,7 +40,7 @@ int enc_int32_cmp(uint8_t *int1, size_t int1_len, uint8_t *int2, size_t int2_len
 	if (bytearray2int(pSrc2_decrypted, src2_decrypted, INT32_LENGTH) == -1)
 		return MEMORY_COPY_ERROR;
 
-  cmp = obs_int32_cmp(src1_decrypted, src2_decrypted);
+	cmp = obs_int32_cmp(src1_decrypted, src2_decrypted);
 
 	memcpy(result, &cmp, res_len);
 	
@@ -56,7 +55,8 @@ int enc_int32_cmp(uint8_t *int1, size_t int1_len, uint8_t *int2, size_t int2_len
 
 }
 /* Sum of two encrypted by aes_gcm integers
- @input: uint8_t array - encrypted integer1
+ @input: sgx_aes_ctr_128bit_key_t key - pointer to the master key
+		 uint8_t array - encrypted integer1
 		 size_t - length of encrypted integer1 (SGX_AESGCM_IV_SIZE + INT32_LENGTH + SGX_AESGCM_MAC_SIZE = 32)
 		 uint8_t array - encrypted integer2
 		 size_t - length of encrypted integer2 (SGX_AESGCM_IV_SIZE + INT32_LENGTH + SGX_AESGCM_MAC_SIZE = 32)
@@ -66,7 +66,7 @@ int enc_int32_cmp(uint8_t *int1, size_t int1_len, uint8_t *int2, size_t int2_len
 	* SGX_error, if there was an error during encryption/decryption 
 	0, otherwise
 */
-int enc_int32_add (	uint8_t *int1, size_t int1_len, uint8_t *int2, size_t int2_len, uint8_t *int3, size_t int3_len){
+int enc_int32_add (sgx_aes_ctr_128bit_key_t* key, uint8_t *int1, size_t int1_len, uint8_t *int2, size_t int2_len, uint8_t *int3, size_t int3_len){
 
 	uint8_t *dec_int1, *dec_int2, *dec_int3;
 	int32_t decint1_int, decint2_int;
@@ -81,11 +81,11 @@ int enc_int32_add (	uint8_t *int1, size_t int1_len, uint8_t *int2, size_t int2_l
     	return MEMORY_ALLOCATION_ERROR;;
     }
 
-	resp = decrypt_bytes(int1, int1_len, dec_int1_v, INT32_LENGTH);
+	resp = decrypt_bytes(key, int1, int1_len, dec_int1_v, INT32_LENGTH);
 	if (resp != SGX_SUCCESS)
 		return resp;
 
-	resp = decrypt_bytes(int2, int2_len, dec_int2_v, INT32_LENGTH);
+	resp = decrypt_bytes(key, int2, int2_len, dec_int2_v, INT32_LENGTH);
 	if (resp != SGX_SUCCESS)
 		return resp;
 
@@ -104,7 +104,7 @@ int enc_int32_add (	uint8_t *int1, size_t int1_len, uint8_t *int2, size_t int2_l
 	if (int2bytearray((int32_t) decint3_int, dec_int3_v, INT32_LENGTH))
 		return MEMORY_COPY_ERROR;
 
-	resp = encrypt_bytes(dec_int3_v, INT32_LENGTH, int3, int3_len);
+	resp = encrypt_bytes(key, dec_int3_v, INT32_LENGTH, int3, int3_len);
 
 	memset_s(dec_int1_v, INT32_LENGTH, 0, INT32_LENGTH);
 	memset_s(dec_int2_v, INT32_LENGTH, 0, INT32_LENGTH);
@@ -123,7 +123,8 @@ int enc_int32_add (	uint8_t *int1, size_t int1_len, uint8_t *int2, size_t int2_l
 }
 
 /* Subtraction of two aes_gcm encrypted integers
- @input: uint8_t array - encrypted integer1
+ @input: sgx_aes_ctr_128bit_key_t key - pointer to the master key
+		 uint8_t array - encrypted integer1
 		 size_t - length of encrypted integer1 (SGX_AESGCM_IV_SIZE + INT32_LENGTH + SGX_AESGCM_MAC_SIZE = 32)
 		 uint8_t array - encrypted integer2
 		 size_t - length of encrypted integer2 (SGX_AESGCM_IV_SIZE + INT32_LENGTH + SGX_AESGCM_MAC_SIZE = 32)
@@ -133,7 +134,7 @@ int enc_int32_add (	uint8_t *int1, size_t int1_len, uint8_t *int2, size_t int2_l
 	* SGX_error, if there was an error during encryption/decryption 
 	0, otherwise
 */
-int enc_int32_sub (uint8_t *int1, size_t int1_len, uint8_t *int2, size_t int2_len, uint8_t *int3, size_t int3_len){
+int enc_int32_sub (sgx_aes_ctr_128bit_key_t* key, uint8_t *int1, size_t int1_len, uint8_t *int2, size_t int2_len, uint8_t *int3, size_t int3_len){
 
 	int32_t decint1_int, decint2_int;
 	int64_t decint3_int;
@@ -143,11 +144,11 @@ int enc_int32_sub (uint8_t *int1, size_t int1_len, uint8_t *int2, size_t int2_le
     uint8_t *dec_int2_v = (uint8_t *)malloc(INT32_LENGTH);
     uint8_t *dec_int3_v = (uint8_t *)malloc(INT32_LENGTH);
 
-	resp = decrypt_bytes(int1, int1_len, dec_int1_v, INT32_LENGTH);
+	resp = decrypt_bytes(key, int1, int1_len, dec_int1_v, INT32_LENGTH);
 	if (resp != SGX_SUCCESS)
 		return resp;
 	
-	resp = decrypt_bytes(int2, int2_len, dec_int2_v, INT32_LENGTH);
+	resp = decrypt_bytes(key, int2, int2_len, dec_int2_v, INT32_LENGTH);
 	if (resp != SGX_SUCCESS)
 		return resp;
 		
@@ -167,7 +168,7 @@ int enc_int32_sub (uint8_t *int1, size_t int1_len, uint8_t *int2, size_t int2_le
 	if (int2bytearray((int32_t) decint3_int, dec_int3_v, INT32_LENGTH))
 		return MEMORY_COPY_ERROR;
 
-	resp = encrypt_bytes(dec_int3_v, INT32_LENGTH, int3, int3_len);
+	resp = encrypt_bytes(key, dec_int3_v, INT32_LENGTH, int3, int3_len);
 
 	memset_s(dec_int1_v, INT32_LENGTH, 0, INT32_LENGTH);
 	memset_s(dec_int2_v, INT32_LENGTH, 0, INT32_LENGTH);
@@ -185,7 +186,8 @@ int enc_int32_sub (uint8_t *int1, size_t int1_len, uint8_t *int2, size_t int2_le
 }
 
 /* Multiplication of two encrypted by aes_gcm integers
- @input: uint8_t array - encrypted integer1
+ @input: sgx_aes_ctr_128bit_key_t key - pointer to the master key
+		 uint8_t array - encrypted integer1
 		 size_t - length of encrypted integer1 (SGX_AESGCM_IV_SIZE + INT32_LENGTH + SGX_AESGCM_MAC_SIZE = 32)
 		 uint8_t array - encrypted integer2
 		 size_t - length of encrypted integer2 (SGX_AESGCM_IV_SIZE + INT32_LENGTH + SGX_AESGCM_MAC_SIZE = 32)
@@ -195,7 +197,7 @@ int enc_int32_sub (uint8_t *int1, size_t int1_len, uint8_t *int2, size_t int2_le
 	* SGX_error, if there was an error during encryption/decryption 
 	0, otherwise
 */
-int enc_int32_mult (	uint8_t *int1, size_t int1_len, uint8_t *int2, size_t int2_len, uint8_t *int3, size_t int3_len){
+int enc_int32_mult (sgx_aes_ctr_128bit_key_t* key, uint8_t *int1, size_t int1_len, uint8_t *int2, size_t int2_len, uint8_t *int3, size_t int3_len){
 
 	int32_t decint1_int, decint2_int;
 	int64_t decint3_int;
@@ -205,11 +207,11 @@ int enc_int32_mult (	uint8_t *int1, size_t int1_len, uint8_t *int2, size_t int2_
     uint8_t *dec_int2_v = (uint8_t *)malloc(INT32_LENGTH);
     uint8_t *dec_int3_v = (uint8_t *)malloc(INT32_LENGTH);
 
-	resp = decrypt_bytes(int1, int1_len, dec_int1_v, INT32_LENGTH);
+	resp = decrypt_bytes(key, int1, int1_len, dec_int1_v, INT32_LENGTH);
 	if (resp != SGX_SUCCESS)
 		return resp;
 
-	resp = decrypt_bytes(int2, int2_len, dec_int2_v, INT32_LENGTH);
+	resp = decrypt_bytes(key, int2, int2_len, dec_int2_v, INT32_LENGTH);
 	if (resp != SGX_SUCCESS)
 		return resp;
 
@@ -229,7 +231,7 @@ int enc_int32_mult (	uint8_t *int1, size_t int1_len, uint8_t *int2, size_t int2_
 	if (int2bytearray((int32_t) decint3_int, dec_int3_v, INT32_LENGTH))
 		return MEMORY_COPY_ERROR;
 
-	resp = encrypt_bytes(dec_int3_v, INT32_LENGTH, int3, int3_len);
+	resp = encrypt_bytes(key, dec_int3_v, INT32_LENGTH, int3, int3_len);
 
 	memset_s(dec_int1_v, INT32_LENGTH, 0, INT32_LENGTH);
 	memset_s(dec_int2_v, INT32_LENGTH, 0, INT32_LENGTH);
@@ -247,7 +249,8 @@ int enc_int32_mult (	uint8_t *int1, size_t int1_len, uint8_t *int2, size_t int2_
 }
 
 /* Modulus operation of two encrypted by aes_gcm integers
- @input: uint8_t array - encrypted integer1
+ @input: sgx_aes_ctr_128bit_key_t key - pointer to the master key
+		 uint8_t array - encrypted integer1
 		 size_t - length of encrypted integer1 (SGX_AESGCM_IV_SIZE + INT32_LENGTH + SGX_AESGCM_MAC_SIZE = 32)
 		 uint8_t array - encrypted module
 		 size_t - length of encrypted module (SGX_AESGCM_IV_SIZE + INT32_LENGTH + SGX_AESGCM_MAC_SIZE = 32)
@@ -257,7 +260,7 @@ int enc_int32_mult (	uint8_t *int1, size_t int1_len, uint8_t *int2, size_t int2_
 	* SGX_error, if there was an error during encryption/decryption 
 	0, otherwise
 */
-int enc_int32_mod (	uint8_t *int1, size_t int1_len, uint8_t *int2, size_t int2_len, uint8_t *int3, size_t int3_len){
+int enc_int32_mod (sgx_aes_ctr_128bit_key_t* key, uint8_t *int1, size_t int1_len, uint8_t *int2, size_t int2_len, uint8_t *int3, size_t int3_len){
 
 	int32_t decint1_int, decint2_int;
 	int64_t decint3_int;
@@ -267,11 +270,11 @@ int enc_int32_mod (	uint8_t *int1, size_t int1_len, uint8_t *int2, size_t int2_l
     uint8_t *dec_int2_v = (uint8_t *)malloc(INT32_LENGTH);
     uint8_t *dec_int3_v = (uint8_t *)malloc(INT32_LENGTH);
 
-	resp = decrypt_bytes(int1, int1_len, dec_int1_v, INT32_LENGTH);
+	resp = decrypt_bytes(key, int1, int1_len, dec_int1_v, INT32_LENGTH);
 	if (resp != SGX_SUCCESS)
 		return resp;
 
-	resp = decrypt_bytes(int2, int2_len, dec_int2_v, INT32_LENGTH);
+	resp = decrypt_bytes(key, int2, int2_len, dec_int2_v, INT32_LENGTH);
 	if (resp != SGX_SUCCESS)
 		return resp;
 
@@ -293,7 +296,7 @@ int enc_int32_mod (	uint8_t *int1, size_t int1_len, uint8_t *int2, size_t int2_l
 	if (int2bytearray((int32_t) decint3_int, dec_int3_v, INT32_LENGTH))
 		return MEMORY_COPY_ERROR;
 
-	resp = encrypt_bytes(dec_int3_v, INT32_LENGTH, int3, int3_len);
+	resp = encrypt_bytes(key, dec_int3_v, INT32_LENGTH, int3, int3_len);
 
 	memset_s(dec_int1_v, INT32_LENGTH, 0, INT32_LENGTH);
 	memset_s(dec_int2_v, INT32_LENGTH, 0, INT32_LENGTH);
@@ -312,7 +315,8 @@ int enc_int32_mod (	uint8_t *int1, size_t int1_len, uint8_t *int2, size_t int2_l
 }
 
 /* Power operation of two encrypted by aes_gcm integers
- @input: uint8_t array - encrypted integer base
+ @input: sgx_aes_ctr_128bit_key_t key - pointer to the master key
+		 uint8_t array - encrypted integer base
 		 size_t - length of encrypted base (SGX_AESGCM_IV_SIZE + INT32_LENGTH + SGX_AESGCM_MAC_SIZE = 32)
 		 uint8_t array - encrypted integer exponent
 		 size_t - length of encrypted exponent (SGX_AESGCM_IV_SIZE + INT32_LENGTH + SGX_AESGCM_MAC_SIZE = 32)
@@ -322,7 +326,8 @@ int enc_int32_mod (	uint8_t *int1, size_t int1_len, uint8_t *int2, size_t int2_l
 	* SGX_error, if there was an error during encryption/decryption 
 	0, otherwise
 */
-int enc_int32_pow (	uint8_t *int1, size_t int1_len, uint8_t *int2, size_t int2_len, uint8_t *int3, size_t int3_len){
+// TODO: should be changed. Compute power using a binary representation of a power.Check that the result is an int.
+int enc_int32_pow (sgx_aes_ctr_128bit_key_t* key, uint8_t *int1, size_t int1_len, uint8_t *int2, size_t int2_len, uint8_t *int3, size_t int3_len){
 
 	int32_t decint1_int, decint2_int;
 	int64_t decint3_int;
@@ -332,11 +337,11 @@ int enc_int32_pow (	uint8_t *int1, size_t int1_len, uint8_t *int2, size_t int2_l
     uint8_t *dec_int2_v = (uint8_t *)malloc(INT32_LENGTH);
     uint8_t *dec_int3_v = (uint8_t *)malloc(INT32_LENGTH);
 
-	resp = decrypt_bytes(int1, int1_len, dec_int1_v, INT32_LENGTH);
+	resp = decrypt_bytes(key, int1, int1_len, dec_int1_v, INT32_LENGTH);
 	if (resp != SGX_SUCCESS)
 		return resp;
 
-	resp = decrypt_bytes(int2, int2_len, dec_int2_v, INT32_LENGTH);
+	resp = decrypt_bytes(key, int2, int2_len, dec_int2_v, INT32_LENGTH);
 	if (resp != SGX_SUCCESS)
 		return resp;
 
@@ -356,7 +361,7 @@ int enc_int32_pow (	uint8_t *int1, size_t int1_len, uint8_t *int2, size_t int2_l
 	if (int2bytearray((int32_t) decint3_int, dec_int3_v, INT32_LENGTH))
 		return MEMORY_COPY_ERROR;
 
-	resp = encrypt_bytes(dec_int3_v, INT32_LENGTH, int3, int3_len);
+	resp = encrypt_bytes(key, dec_int3_v, INT32_LENGTH, int3, int3_len);
 
 	memset_s(dec_int1_v, INT32_LENGTH, 0, INT32_LENGTH);
 	memset_s(dec_int2_v, INT32_LENGTH, 0, INT32_LENGTH);
@@ -375,7 +380,8 @@ int enc_int32_pow (	uint8_t *int1, size_t int1_len, uint8_t *int2, size_t int2_l
 }
 
 /* Division of two encrypted by aes_gcm integers
- @input: uint8_t array - encrypted integer1
+ @input: sgx_aes_ctr_128bit_key_t key - pointer to the master key
+		 uint8_t array - encrypted integer1
 		 size_t - length of encrypted integer1 (SGX_AESGCM_IV_SIZE + INT32_LENGTH + SGX_AESGCM_MAC_SIZE = 32)
 		 uint8_t array - encrypted integer2
 		 size_t - length of encrypted integer2 (SGX_AESGCM_IV_SIZE + INT32_LENGTH + SGX_AESGCM_MAC_SIZE = 32)
@@ -385,7 +391,7 @@ int enc_int32_pow (	uint8_t *int1, size_t int1_len, uint8_t *int2, size_t int2_l
 	* SGX_error, if there was an error during encryption/decryption 
 	0, otherwise
 */
-int enc_int32_div (	uint8_t *int1, size_t int1_len, uint8_t *int2, size_t int2_len, uint8_t *int3, size_t int3_len){
+int enc_int32_div (sgx_aes_ctr_128bit_key_t* key, uint8_t *int1, size_t int1_len, uint8_t *int2, size_t int2_len, uint8_t *int3, size_t int3_len){
 
 	int32_t decint1_int, decint2_int;
 	int64_t decint3_int;
@@ -395,11 +401,11 @@ int enc_int32_div (	uint8_t *int1, size_t int1_len, uint8_t *int2, size_t int2_l
     uint8_t *dec_int2_v = (uint8_t *)malloc(INT32_LENGTH);
     uint8_t *dec_int3_v = (uint8_t *)malloc(INT32_LENGTH);
 
-	resp = decrypt_bytes(int1, int1_len, dec_int1_v, INT32_LENGTH);
+	resp = decrypt_bytes(key, int1, int1_len, dec_int1_v, INT32_LENGTH);
 	if (resp != SGX_SUCCESS)
 		return resp;
 
-	resp = decrypt_bytes(int2, int2_len, dec_int2_v, INT32_LENGTH);
+	resp = decrypt_bytes(key, int2, int2_len, dec_int2_v, INT32_LENGTH);
 	if (resp != SGX_SUCCESS)
 		return resp;
 
@@ -424,7 +430,7 @@ int enc_int32_div (	uint8_t *int1, size_t int1_len, uint8_t *int2, size_t int2_l
 	if (int2bytearray((int32_t) decint3_int, dec_int3_v, INT32_LENGTH))
 		return MEMORY_COPY_ERROR;
 
-	resp = encrypt_bytes(dec_int3_v, INT32_LENGTH, int3, int3_len);
+	resp = encrypt_bytes(key, dec_int3_v, INT32_LENGTH, int3, int3_len);
 
 	memset_s(dec_int1_v, INT32_LENGTH, 0, INT32_LENGTH);
 	memset_s(dec_int2_v, INT32_LENGTH, 0, INT32_LENGTH);
@@ -439,4 +445,5 @@ int enc_int32_div (	uint8_t *int1, size_t int1_len, uint8_t *int2, size_t int2_l
 	free_allocated_memory(dec_int3_v);
 
 	return resp;
+
 }

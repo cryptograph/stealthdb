@@ -69,4 +69,6 @@ typedef unsigned long  DWORD; //4bytes
 #define CMD_TIMESTAMP_ENC 151
 #define CMD_TIMESTAMP_DEC 152
 
+#define CMD_LOAD_KEY 500
+#define CMD_KEY_GEN 501
 
