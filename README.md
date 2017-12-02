@@ -9,24 +9,13 @@ StealthDB is a research project and is **not** suitable for production use.
 
 ## Prerequisites
 
-* nasm
+* nasm (`sudo apt-get install nasm`)
 
-	```
-	sudo apt-get install nasm
-	```
+* PostgreSQL 9.6 or above (`sudo apt-get install postgresql postgresql-server-dev-all`)
 
-* PostgreSQL 9.6 or above
+* Intel SGX-enabled CPU with version 1.9 of the [Intel SGX PSW&SDK](https://github.com/01org/linux-sgx#build-the-intelr-sgx-sdk-and-intelr-sgx-psw-package) and [Intel SGX Driver](https://github.com/01org/linux-sgx-driver#build-and-install-the-intelr-sgx-driver) (and their build dependencies)
 
-	```
-	sudo apt-get install postgresql postgresql-server-dev-all
-	sudo service postgresql restart
-	```
-
-* Intel SGX-enabled CPU with installed in the `/opt` directory [Intel SGX PSW&SDK](https://github.com/01org/linux-sgx#build-the-intelr-sgx-sdk-and-intelr-sgx-psw-package) and [Intel SGX Driver](https://github.com/01org/linux-sgx-driver#build-and-install-the-intelr-sgx-driver), version 1.9.
-
-* Linux, Ubuntu Desktop-16.04-LTS 64-bit
-
-## Quickstart (Ubuntu)
+## Quickstart (Ubuntu Desktop-16.04-LTS 64-bit)
 
 1. Build and install StealthDB
 
