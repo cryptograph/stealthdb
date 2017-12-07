@@ -1,19 +1,20 @@
 include vars.mk
 
-######## App Settings ########
+C_SRCS := $(wildcard $(EXTENSION_DIR)/*.c)
+C_OBJS := $(C_SRCS:.c=.o)
 
-C_Files := $(wildcard $(EXTENSION_DIR)/*.c)
-C_Objects := $(C_Files:.c=.o)
+CXX_SRCS := $(wildcard utils/*.cpp) $(wildcard $(INTERFACE_DIR)/*.cpp)
+CXX_OBJS := $(CXX_SRCS:.cpp=.o)
 
-Cpp_Files := $(wildcard utils/*.cpp) $(wildcard $(INTERFACE_DIR)/*.cpp)
-Cpp_Objects := $(Cpp_Files:.cpp=.o)
-
-INC:= include $(UNTRUSTED_DIR) $(SGX_SDK)/include
+INC:= include $(SGX_INCLUDE_PATH) $(UNTRUSTED_DIR)
 
 INCFLAGS:=$(INC:%=-I%)
+CPPFLAGS := -DTOKEN_FILENAME=\"$(STEALTHDIR)/$(ENCLAVE_NAME).token\" \
+			-DENCLAVE_FILENAME=\"$(STEALTHDIR)/$(ENCLAVE_NAME).signed.so\" \
+			-DDATA_FILENAME=\"$(STEALTHDIR)/stealthDB.data\"
 CFLAGS := $(SGX_COMMON_CFLAGS) -fPIC -Wno-attributes $(INCFLAGS)
-CXXFLAGS := $(CFLAGS) -std=c++11
-LDFLAGS := $(SGX_COMMON_CFLAGS) -L$(SGX_LIBRARY_PATH) -l$(Urts_Library_Name) -lpthread
+CXXFLAGS := $(CFLAGS) $(CPPFLAGS) -std=c++11
+LDFLAGS := $(SGX_COMMON_CFLAGS) -l$(SGX_URTS) -lpthread
 
 .PHONY: all
 
@@ -49,30 +50,27 @@ $(EXTENSION_DIR)/%.o: $(EXTENSION_DIR)/%.c
 	@$(CC) $(CFLAGS) $(PSQL_INCLUDEDIRS) -o $@ -c $^
 	@echo "CC extension <=  $<"
 	
-$(UNTRUSTED_DIR)/encdb.so: $(UNTRUSTED_DIR)/enclave_u.o $(Cpp_Objects) $(C_Objects)
+$(UNTRUSTED_DIR)/encdb.so: $(UNTRUSTED_DIR)/enclave_u.o $(CXX_OBJS) $(C_OBJS)
 	@$(CC)  $(PSQL_LIBDIR) $^ -shared -o $@ $(LDFLAGS) -lstdc++
 	@echo "CC extension <=  $<"
-	@mkdir -p ../$(RUNTIME_DIR)
-	@mv $(UNTRUSTED_DIR)/encdb.so ../$(RUNTIME_DIR)
-	@cp $(EXTENSION_DIR)/*.control ../$(RUNTIME_DIR)
-	@cp $(EXTENSION_DIR)/*.sql ../$(RUNTIME_DIR)
+	@mkdir -p $(BUILD_DIR)
+	@mv $(UNTRUSTED_DIR)/encdb.so $(BUILD_DIR)
+	@cp $(EXTENSION_DIR)/*.control $(BUILD_DIR)
+	@cp $(EXTENSION_DIR)/*.sql $(BUILD_DIR)
 	
-.PHONY: clean install
+.PHONY: clean install uninstall
 
-install:	
-	cp ../$(RUNTIME_DIR)/encdb.so $(PKGLIBDIR)
-	cp ../$(RUNTIME_DIR)/*.control $(SHAREDIR)
-	cp ../$(RUNTIME_DIR)/*.sql $(SHAREDIR)
+install:
+	cp $(BUILD_DIR)/encdb.so $(PSQL_PKG_LIBDIR)
+	cp $(BUILD_DIR)/*.control $(PSQL_SHAREDIR)
+	cp $(BUILD_DIR)/*.sql $(PSQL_SHAREDIR)
 	@mkdir -p $(STEALTHDIR)
 	@test -e $(STEALTHDIR)/stealthDB.data || touch $(STEALTHDIR)/stealthDB.data
 	@chown postgres:postgres $(STEALTHDIR)/stealthDB.data
 
-remove: 
-	rm -r $(STEALTHDIR)
-	rm $(PKGLIBDIR)/encdb.so
-	rm $(SHAREDIR)/encdb.control
-	rm $(SHAREDIR)/encdb--0.0.1.sql 
-	@rm -f $(Cpp_Objects) $(C_Objects) $(UNTRUSTED_DIR)/enclave_u.*
-	
+uninstall:
+	$(RM) $(PSQL_PKG_LIBDIR).encdb.so $(PSQL_SHAREDIR)/*.control $(PSQL_SHAREDIR)/*.sql
+	$(RM) -r $(STEALTHDIR)
+
 clean:
-	@rm -f $(Cpp_Objects) $(C_Objects) $(UNTRUSTED_DIR)/enclave_u.*
+	@$(RM) $(CXX_OBJS) $(C_OBJS) $(UNTRUSTED_DIR)/enclave_u.*

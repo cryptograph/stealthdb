@@ -16,12 +16,6 @@
 # define FALSE 0
 #endif
 
-
-#define TOKEN_FILENAME   "/usr/local/lib/stealthdb/enclave.token"
-#define ENCLAVE_FILENAME "/usr/local/lib/stealthdb/enclave.signed.so"
-#define DATA_FILENAME "/usr/local/lib/stealthdb/stealthDB.data"
-
-
 #if defined(__cplusplus)
 extern "C" {
 #endif

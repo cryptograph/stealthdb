@@ -1,59 +1,41 @@
 include vars.mk
 -include status.mk
 
-######## SGX SDK Settings ########
-
-ifeq ($(SGX_DEBUG), 1)
-  ifeq ($(SGX_PRERELEASE), 1)
-    $(error Cannot set SGX_DEBUG and SGX_PRERELEASE at the same time!!)
-  endif
-endif
-
-Crypto_Library_Name := sgx_tcrypto
-
-Cpp_Files := $(wildcard utils/*.cpp) $(filter-out $(wildcard $(ENCLAVE_DIR)/*int32*.cpp),$(wildcard $(ENCLAVE_DIR)/*.cpp))
+CXX_SRCS := $(wildcard utils/*.cpp) $(filter-out $(wildcard $(ENCLAVE_DIR)/*int32*.cpp),$(wildcard $(ENCLAVE_DIR)/*.cpp))
 
 ifeq ($(OBLVS), 1)
   BUILD_TARGET = oblvs
-  Cpp_Files += $(ENCLAVE_DIR)/enc_oblvs_int32_ops.cpp
+  CXX_SRCS += $(ENCLAVE_DIR)/enc_oblvs_int32_ops.cpp
 else
   BUILD_TARGET = non_oblvs
-  Cpp_Files += $(ENCLAVE_DIR)/enc_int32_ops.cpp
+  CXX_SRCS += $(ENCLAVE_DIR)/enc_int32_ops.cpp
 endif
 
-Cpp_Objects := $(Cpp_Files:.cpp=.o)
+CXX_OBJS := $(CXX_SRCS:.cpp=.o)
 ifndef BUILT_TARGET
   BUILT_TARGET = $(BUILD_TARGET)
 endif
 
-Asm_Files := $(wildcard utils/*.S)
-Asm_Objects := $(Asm_Files:.S=.o)
+ASM_SRCS := $(wildcard utils/*.S)
+ASM_OBJS := $(ASM_SRCS:.S=.o)
 
-INC:= include $(SGX_SDK)/include $(SGX_SDK)/include/tlibc $(SGX_SDK)/include/stlport .
+INC:= include $(SGX_INCLUDE_PATH) $(SGX_INCLUDE_PATH)/tlibc $(SGX_INCLUDE_PATH)/stlport .
+
 INCFLAGS:=$(INC:%=-I%)
 
 COMMON_FLAGS:= $(SGX_COMMON_CFLAGS) -nostdinc -fvisibility=hidden -fpie -fstack-protector $(INCFLAGS) -fno-builtin-printf
-CFLAGS := $(COMMON_FLAGS) -Wno-implicit-function-declaration -std=c11 $(Common_C_Cpp_Flags)
+CFLAGS := $(COMMON_FLAGS) -Wno-implicit-function-declaration -std=c11
 CXXFLAGS :=  $(COMMON_FLAGS) -std=c++11 -nostdinc++
 
-LDFLAGS := $(SGX_COMMON_CFLAGS) -Wl,--no-undefined -nostdlib -nodefaultlibs -nostartfiles -L$(SGX_LIBRARY_PATH) \
-	-Wl,--whole-archive -l$(Trts_Library_Name) -Wl,--no-whole-archive \
-	-Wl,--start-group -lsgx_tstdc -lsgx_tstdcxx -l$(Crypto_Library_Name) -l$(Service_Library_Name) -Wl,--end-group \
+LDFLAGS := $(SGX_COMMON_CFLAGS) -Wl,--no-undefined -nostdlib -nodefaultlibs -nostartfiles \
+	-Wl,--whole-archive -l$(SGX_TRTS) -Wl,--no-whole-archive \
+	-Wl,--start-group -lsgx_tstdc -lsgx_tstdcxx -lsgx_tcrypto -l$(SGX_SERVICELIB) -Wl,--end-group \
 	-Wl,-Bstatic -Wl,-Bsymbolic -Wl,--no-undefined \
 	-Wl,-pie,-eenclave_entry -Wl,--export-dynamic  \
 	-Wl,--defsym,__ImageBase=0 \
 	-Wl,--version-script=$(ENCLAVE_DIR)/enclave.lds
 
-
-ifeq ($(SGX_MODE), HW)
-  ifneq ($(SGX_DEBUG), 1)
-    ifneq ($(SGX_PRERELEASE), 1)
-      Build_Mode = HW_RELEASE
-    endif
-  endif
-endif
-
-.PHONY: check_target all run
+.PHONY: check_target all
 
 check_target:
 ifneq ($(BUILT_TARGET),$(BUILD_TARGET))
@@ -61,26 +43,7 @@ ifneq ($(BUILT_TARGET),$(BUILD_TARGET))
 endif
 	@echo "BUILT_TARGET=$(BUILD_TARGET)" > status.mk
  
-ifeq ($(Build_Mode), HW_RELEASE)
-all: check_target $(TARGET) $(SIGNED_TARGET)
-	@echo "Build enclave $(TARGET) [$(Build_Mode)|$(SGX_ARCH)] success!"
-	@echo
-	@echo "*********************************************************************************************************************************************************"
-	@echo "PLEASE NOTE: In this mode, please sign the enclave.so first using Two Step Sign mechanism before you run the app to launch and access the enclave."
-	@echo "*********************************************************************************************************************************************************"
-	@echo 
-
-else
-all: check_target debug_sign $(TARGET) 
-endif
-
-debug_sign: $(DEBUG_SIGNED_TARGET)
-
-run: all
-ifneq ($(Build_Mode), HW_RELEASE)
-	@$(CURDIR)/app
-	@echo "RUN  =>  app [$(SGX_MODE)|$(SGX_ARCH), OK]"
-endif
+all: check_target $(DEBUG_SIGNED_TARGET) $(TARGET)
 
 ######## enclave Objects ########
 
@@ -105,12 +68,12 @@ $(ENCLAVE_DIR)/%.o: $(ENCLAVE_DIR)/%.cpp
 	@$(CXX) $(CXXFLAGS) -c $< -o $@
 	@echo "CXX  <=  $<"
 
-$(Asm_Objects): %.o: %.S
+$(ASM_OBJS): %.o: %.S
 	@nasm -f elf64 $< -o $@
 	@echo "NASM  <=  $<"
   
-$(TARGET): $(ENCLAVE_DIR)/enclave_t.o $(Cpp_Objects) $(Asm_Objects) $(Enclave_C_Objects)
-	@$(CXX) $(Cpp_Objects) $(Asm_Objects) $(ENCLAVE_DIR)/enclave_t.o -o $@ $(LDFLAGS)
+$(TARGET): $(ENCLAVE_DIR)/enclave_t.o $(CXX_OBJS) $(ASM_OBJS)
+	@$(CXX) $(CXX_OBJS) $(ASM_OBJS) $(ENCLAVE_DIR)/enclave_t.o -o $@ $(LDFLAGS)
 	@echo "LINK =>  $@"
 
 $(DEBUG_ENCLAVE_CONFIG): $(ENCLAVE_CONFIG)
@@ -129,15 +92,9 @@ install:
 	@if [ -e $(SIGNED_TARGET) ]; then cp $(SIGNED_TARGET) $(STEALTHDIR)/$(ENCLAVE_NAME).signed.so; fi
 	@if [ -e $(DEBUG_SIGNED_TARGET) ]; then cp $(DEBUG_SIGNED_TARGET) $(STEALTHDIR)/$(ENCLAVE_NAME).signed.so; fi
 	@echo cp $(RUNTIME_DIR)/$(DEBUG_ENCLAVE_NAME).signed.so $(STEALTHDIR)/$(ENCLAVE_NAME).signed.so;
-
-remove:
-	@rm -f status.mk *.so $(Asm_Objects) $(ENCLAVE_DIR)/enclave_t.* $(ENCLAVE_DIR)/*.o $(TARGET) \
-	$(ENCLAVE_DIR)/$(DEBUG_ENCLAVE_NAME).key $(ENCLAVE_DIR)/$(DEBUG_ENCLAVE_NAME).pub $(ENCLAVE_DIR)/$(DEBUG_ENCLAVE_NAME).sig \
-	$(DEBUG_SIGNDATA) $(DEBUG_SIGNED_TARGET) \
-	$(SIGNDATA) $(MRENCLAVE) $(SIGNED_TARGET) -r ../$(RUNTIME_DIR)
 	
 clean:
-	@rm -f status.mk *.so $(Asm_Objects) $(ENCLAVE_DIR)/enclave_t.* $(ENCLAVE_DIR)/*.o $(TARGET) \
-	$(ENCLAVE_DIR)/$(DEBUG_ENCLAVE_NAME).pub $(ENCLAVE_DIR)/$(DEBUG_ENCLAVE_NAME).sig \
+	@rm -f status.mk *.so $(ASM_OBJS) $(ENCLAVE_DIR)/enclave_t.* $(ENCLAVE_DIR)/*.o $(TARGET) \
+	$(ENCLAVE_DIR)/$(DEBUG_ENCLAVE_NAME).key $(ENCLAVE_DIR)/$(DEBUG_ENCLAVE_NAME).pub $(ENCLAVE_DIR)/$(DEBUG_ENCLAVE_NAME).sig \
 	$(DEBUG_SIGNDATA) $(DEBUG_SIGNED_TARGET) \
-	$(SIGNDATA) $(MRENCLAVE) $(SIGNED_TARGET) -r ../$(RUNTIME_DIR)
+	$(SIGNDATA) $(MRENCLAVE) $(SIGNED_TARGET) -r $(RUNTIME_DIR)

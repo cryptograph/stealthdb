@@ -22,6 +22,9 @@
 *.la
 *.lo
 
+#ctags
+tags
+
 # Shared objects (inc. Windows DLLs)
 *.dll
 *.so
@@ -45,15 +48,15 @@
 #SGX
 enclave_t.*
 enclave_u.*
+enclave.debug.*
 
-#Text Editors
+#Swap
+.Makefile.*
 *.swp
 
-# Kernel Module Compile Results
-*.mod*
-*.cmd
-.tmp_versions/
-modules.order
-Module.symvers
-Mkfile.old
-dkms.conf
+#Vim
+.vimrc
+
+#Project Artifacts
+status.mk
+build

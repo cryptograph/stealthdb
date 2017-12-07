@@ -1,4 +1,4 @@
-%macro DEF 1 
+%macro DEF 1
   global %1:function
   %1:
 %endmacro
@@ -15,13 +15,8 @@ DEF obs_int32_eq
   ret
 
 DEF obs_int32_lt
-  mov eax, edi
-  sub eax, esi
-  xor eax, esi
-  xor esi, edi
-  or eax, esi
-  xor eax, edi
-  shr eax, 31
+  cmp edi, esi
+  setl al
   ret
 
 DEF obs_int32_select
@@ -67,21 +62,21 @@ obs_int32_bits:
 DEF obs_int32_pow
   push r14
   push rbx
- 
+
   mov r14d, edi
   mov edi, esi
   call obs_int32_bits
   mov edi, r14d
   mov r14d, eax
 
-  mov eax, 1 
- 
-  .loop: 
+  mov eax, 1
+
+  .loop:
     mov ebx, 1
     mov ecx, r14d
     shl ebx, cl
     and ebx, esi
-    
+
     mov r8d, eax
 
     imul eax, eax
@@ -99,7 +94,7 @@ DEF obs_int32_pow
     not ecx
     and eax, ecx
     or eax, ebx
-    
+
     and edx, edi
     and ecx, r8d
     or ecx, edx
@@ -114,4 +109,3 @@ DEF obs_int32_pow
   pop rbx
   pop r14
   ret
-

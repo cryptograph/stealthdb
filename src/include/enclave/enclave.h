@@ -27,8 +27,8 @@ extern "C" {
 void free_allocated_memory(void *pointer);
 
 // FUNCTIONS
-int decrypt_bytes(sgx_aes_ctr_128bit_key_t* key, uint8_t *pSrc, size_t srcLen, uint8_t *pDst, size_t dstLen);
-int encrypt_bytes(sgx_aes_ctr_128bit_key_t* key, uint8_t *pSrc, size_t srcLen, uint8_t *pDst, size_t dstLen);;
+int decrypt_bytes(uint8_t *pSrc, size_t srcLen, uint8_t *pDst, size_t dstLen);
+int encrypt_bytes(uint8_t *pSrc, size_t srcLen, uint8_t *pDst, size_t dstLen);;
 #if defined(__cplusplus)
 }
 #endif
