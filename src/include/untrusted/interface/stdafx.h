@@ -15,9 +15,7 @@
 #include <unistd.h>
 #include <algorithm>
 
-#include "enclave/Queue.h"
-#include "utils/SyncUtils.h"
-#include "utils/Base64Coder.h"
+#include "enclave/Queue.hpp"
+#include "tools/sync_utils.hpp"
+#include "tools/base64.hpp"
 #include "defs.h"
-
-

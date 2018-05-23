@@ -1,68 +1,18 @@
-## Ubuntu Desktop-16.04-LTS, 64-bit
+# The StealthDB Installation Process
 
-### Prerequisites
-StealthDB dependencies can be installed by running the script `./install-dependencies.sh`.
-* nasm
-* PostgreSQL 10.0
-* [Intel SGX PSW&SDK](https://github.com/01org/linux-sgx#build-the-intelr-sgx-sdk-and-intelr-sgx-psw-package) and [Intel SGX Driver](https://github.com/01org/linux-sgx-driver#build-and-install-the-intelr-sgx-driver) (and their build dependencies)
+## 1. a) Building and Installing StealthDB on Ubuntu
 
-### Build and install StealthDB
-Building process includes the generation of a signing key, an extension and an enclave compilation, the enclave signing. All needed libraries can be found in "build\" folder.
+The build process, which is kicked off by running `make`, consists of the building the enclave used by StealthDB as well as the interface it presents to PostgreSQL. The enclave is built as a shared library (`enclave.so`) and is signed using a signing key generated during the build process. The extension itself is also a shared library (`encdb.so`). All the build artifacts can be found in the `build/` folder.
 
-	```
-	make
-	```
+`sudo make install` starts the installation process, which involes copying the artifacts in the `build` directory into various system and PostgreSQL directories.
 
-During the installation process we create the folder "/usr/local/lib/stealthdb" and copy needed files to it.
+## 1. b) Building and Installing StealthDB in a Debian-based Docker container
 
-	```
-	sudo make install
-	```
+To build the docker image, we bypass the `install_dependencies.sh` script and specify that the Dockerfile install dependencies and clone the StealthDB GitHub repository. This built image is then run, and we specify that the running container use the Intel SGX driver (installed on the host kernel) and Intel AESMD service (running on the host) using the `--device=/dev/isgx` and `--volume=/var/run/aesmd/aesm.socket` flags.
 
-## Docker
-
-### Prerequisites
-
-* Docker
-
-Other dependencies can be installed by running the script `./install-dependencies.sh`.
-
-### Run StealthDB
-We build the docker container from the native postgres image and install StealthDB inside. 
-
-	```
-	sudo make docker
-	```
-
-## Client
-
-1. Run the PostgreSQL client (ex. `sudo -u postgres psql` if PostgreSQL was installed on the host or `sudo -u postgres psql -h 0.0.0.0` in case of docker path), load the extension into the database and generate the default master key
- 
-	```
-	create extension encdb;
-	select generate_key();
-	```
-
-2. Use encrypted datatypes (e.g. `enc_int4`) in tables, queries and functions likewise native datatypes. See more information in the [manual](https://github.com/cryptograph/stealthdb/blob/master/docs/user/README.md)
-
-
-## Examples
-
-1. Try some examples
-
-	```
-	select pg_enc_int4_encrypt(1) + pg_enc_int4_encrypt(2);
-	select pg_enc_int4_decrypt(pg_enc_int4_encrypt(1) + pg_enc_int4_encrypt(2));
-	```
- 
-2. Enable auto-encryption of input values and auto-decryption of encrypted query results, run `select enable_debug_mode(1);`. This will enable you to run the following
-
-	```
-	select 1::enc_int4 > 2::enc_int4;
-	select 10.5::enc_float4 / 2.2::enc_float4;
-	```
+As a result, we need only build in the docker container a subset of all the Intel SGX artifacts. The Dockerfile invokes the `sgx-deps.mk` Makefile to do exactly this, and proceeds to build StealthDB inside the running container through a process analogous to the one described in Section 1. a).
 
 ## Note
 
-The enclave was created with SGX_DEBUG=1 flag and signed with an automatically generated signing key. To use an enclave in production, the signing key must be whitelisted by Intel.
+The enclave created by the above build process is created with SGX_DEBUG=1 flag and is signed with an automatically generated signing key. It is thus a debug enclave. To use an enclave in production, the signing key must be whitelisted by Intel.
 

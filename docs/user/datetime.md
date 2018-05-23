@@ -20,4 +20,4 @@
     * expression ISNULL
     * expression NOTNULL
 
-
+* date_part with the 'field' argument being 'year'

@@ -25,8 +25,8 @@
 
 typedef struct _sgx_errlist_t {
     sgx_status_t err;
-    const char *msg;
-    const char *sug; /* Suggestion */
+    const char* msg;
+    const char* sug; /* Suggestion */
 } sgx_errlist_t;
 
 void sgxErrorHandler(int code);
@@ -34,27 +34,27 @@ void sgxErrorHandler(int code);
 /* Error code returned by sgx_create_enclave */
 static sgx_errlist_t sgx_errlist[] = {
    {
-	   SGX_ERROR_INVALID_KEYNAME,
-	   "The key name is an unsupported value",
-	   NULL
+       SGX_ERROR_INVALID_KEYNAME,
+       "The key name is an unsupported value",
+       NULL
    },
    {
-	   SGX_ERROR_INVALID_ISVSVN,
-	   "The isv svn is greater than the enclave's isv svn",
-	   NULL
+       SGX_ERROR_INVALID_ISVSVN,
+       "The isv svn is greater than the enclave's isv svn",
+       NULL
    },
    {
-	   SGX_ERROR_MAC_MISMATCH,
-	   "Indicates verification error for reports, sealed datas, MAC checks and etc",
-	   NULL
+       SGX_ERROR_MAC_MISMATCH,
+       "Indicates verification error for reports, sealed datas, MAC checks and etc",
+       NULL
    },
    {
-	   SGX_ERROR_INVALID_ATTRIBUTE,
-	   "The cpu svn is beyond platform's cpu svn value",
-	   NULL
+       SGX_ERROR_INVALID_ATTRIBUTE,
+       "The cpu svn is beyond platform's cpu svn value",
+       NULL
    },
 
-	{
+    {
         SGX_ERROR_INVALID_PARAMETER,
         "Invalid parameter.",
         NULL
@@ -124,9 +124,9 @@ static sgx_errlist_t sgx_errlist[] = {
         "Can't open enclave file.",
         NULL
     },
-	{
-		SGX_ERROR_SERVICE_UNAVAILABLE,
-		"Indicates aesm didn't respond or the requested service is not supported",
-		NULL
-	},
+    {
+        SGX_ERROR_SERVICE_UNAVAILABLE,
+        "Indicates aesm didn't respond or the requested service is not supported",
+        NULL
+    },
 };

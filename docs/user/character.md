@@ -22,4 +22,4 @@
 
 * Mathematical Operators: +, -, \*, /, %
 
-* String functions: `||`, `LIKE`
+* String functions: `||`, `LIKE`, `SUBSTRING`

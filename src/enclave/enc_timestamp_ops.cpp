@@ -1,54 +1,75 @@
-//
-// ENCRYPTED TIMESTAMPS(8 bytes) FUNCTIONs
-//
-#include "enclave/enclave.h"
-#include "enclave/enclave_t.h"  /* print_string */
-
-extern sgx_aes_ctr_128bit_key_t p_key;
-
+#include "enclave/enc_timestamp_ops.hpp"
 
 /* Compare two encrypted timestamps(int64 - 8 bytes) by aes_gcm algorithm
  @input: uint8_t array - encrypted source1
-		 size_t - length of encrypted source1 (SGX_AESGCM_IV_SIZE + INT64_LENGTH + SGX_AESGCM_MAC_SIZE = 36)
-		 uint8_t array - encrypted source2
-		 size_t - length of encrypted source2 (SGX_AESGCM_IV_SIZE + INT64_LENGTH + SGX_AESGCM_MAC_SIZE = 36)
-
-		 uint8_t array - which contains the result  1 (if a > b). -1 (if b > a), 0 (if a == b)
-		 size_t - length of result (TIMESTAMP_LENGTH = 4)
+         size_t - sizegth of encrypted source1 (SGX_AESGCM_IV_SIZE +
+ INT64_LENGTH + SGX_AESGCM_MAC_SIZE = 36) 
+         uint8_t array - encrypted source2
+         size_t - sizegth of encrypted source2 (SGX_AESGCM_IV_SIZE +
+ INT64_LENGTH + SGX_AESGCM_MAC_SIZE = 36)
+         uint8_t array - which contains the result  1 (if a > b). -1 (if b > a),
+ 0 (if a == b)
+         size_t - size of result (TIMESTAMP_LENGTH = 4)
 
  @return:
  * SGX_error, if there was an error during decryption
 */
-int enc_timestamp_cmp(uint8_t *src1, size_t src1_len, uint8_t *src2, size_t src2_len, uint8_t *result, size_t res_len) {
+int enc_timestamp_cmp(uint8_t* in1,
+                      size_t in1_size,
+                      uint8_t* in2,
+                      size_t in2_size,
+                      uint8_t* out,
+                      size_t out_size)
+{
+    int resp, cmp;
 
-	TIMESTAMP dectm1, dectm2;
-	int resp, cmp;
+    union {
+        TIMESTAMP ts;
+        unsigned char bytes[TIMESTAMP_LENGTH];
+    } lhs, rhs;
 
-	uint8_t *src1_decrypted = (uint8_t *)malloc(TIMESTAMP_LENGTH);
-	uint8_t *src2_decrypted = (uint8_t *)malloc(TIMESTAMP_LENGTH);
+    resp = decrypt_bytes(in1, in1_size, lhs.bytes, TIMESTAMP_LENGTH);
+    if (resp != SGX_SUCCESS)
+        return resp;
 
-	resp = decrypt_bytes(src1, src1_len, src1_decrypted, TIMESTAMP_LENGTH);
-	if (resp != SGX_SUCCESS)
-		return resp;
+    resp = decrypt_bytes(in2, in2_size, rhs.bytes, TIMESTAMP_LENGTH);
+    if (resp != SGX_SUCCESS)
+        return resp;
 
-	resp = decrypt_bytes(src2, src2_len, src2_decrypted, TIMESTAMP_LENGTH);
-	if (resp != SGX_SUCCESS)
-		return resp;
+    cmp = (lhs.ts == rhs.ts) ? 0 : ((lhs.ts < rhs.ts) ? -1 : 1);
 
-	memcpy(&dectm1, src1_decrypted, TIMESTAMP_LENGTH);
-	memcpy(&dectm2, src2_decrypted, TIMESTAMP_LENGTH);
+    memcpy(out, &cmp, out_size);
 
-	cmp = (dectm1 == dectm2) ? 0 : ((dectm1 < dectm2) ? -1 : 1);
+    memset_s(lhs.bytes, TIMESTAMP_LENGTH, 0, TIMESTAMP_LENGTH);
+    memset_s(rhs.bytes, TIMESTAMP_LENGTH, 0, TIMESTAMP_LENGTH);
 
-	memcpy(result, &cmp, INT32_LENGTH);
+    return resp;
+}
 
-	memset_s(src1_decrypted, TIMESTAMP_LENGTH, 0, TIMESTAMP_LENGTH);
-	memset_s(src2_decrypted, TIMESTAMP_LENGTH, 0, TIMESTAMP_LENGTH);
-	memset_s(&dectm1, TIMESTAMP_LENGTH, 0, TIMESTAMP_LENGTH);
-	memset_s(&dectm2, TIMESTAMP_LENGTH, 0, TIMESTAMP_LENGTH);
-	free_allocated_memory(src1_decrypted);
-	free_allocated_memory(src2_decrypted);
+int enc_timestamp_extract_year(uint8_t* in,
+                               size_t in_size,
+                               uint8_t* out,
+                               size_t out_size)
+{
+    union {
+        int val;
+        unsigned char bytes[INT32_LENGTH];
+    } year;
 
-	return resp;
+    union {
+        TIMESTAMP val;
+        unsigned char bytes[TIMESTAMP_LENGTH];
+    } timestamp;
 
+    int resp = decrypt_bytes(in, in_size, timestamp.bytes, TIMESTAMP_LENGTH);
+    if (resp != SGX_SUCCESS)
+        return resp;
+
+    year.val = year_from_timestamp(timestamp.val);
+
+    resp = encrypt_bytes(year.bytes, INT32_LENGTH, out, out_size);
+    memset_s(timestamp.bytes, TIMESTAMP_LENGTH, 0, TIMESTAMP_LENGTH);
+    memset_s(year.bytes, INT32_LENGTH, 0, INT32_LENGTH);
+
+    return resp;
 }

@@ -11,11 +11,19 @@ RUN apt-get update  \
         libtool \
         wget \
         python \
-        libssl-dev \
+        #Have to use downgraded openSSL headers due to compilation errors.
+        libssl1.0-dev \
         libcurl4-openssl-dev \
         protobuf-compiler \
         libprotobuf-dev \
         postgresql-server-dev-all \
  && rm -rf /var/lib/apt/lists/*
 
+COPY sgx-deps.mk /opt/Makefile
+WORKDIR /opt
+RUN make
+
 RUN git clone https://github.com/cryptograph/stealthdb /home/stealthDB
+
+WORKDIR /home/stealthDB
+RUN make && make install
