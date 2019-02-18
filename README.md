@@ -22,7 +22,7 @@ StealthDB is a research project and is **not** suitable for production use.
 0. Install PostgreSQL server and the PostgreSQL extension build tool:
 
 ```
-sudo apt-get install postgresl postgresql-server-dev-all
+sudo apt-get install postgresql postgresql-server-dev-all
 ```
 
 1. Run:
