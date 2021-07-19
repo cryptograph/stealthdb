@@ -23,7 +23,7 @@ int enc_text_concatenate(char* src1,
     int str3_len;
     int len_raw_str1, len_raw_str2, len_raw_str3;
 
-    memcpy(&str3_len, dst_len, sizeof(uint8_t));
+    memcpy(&str3_len, dst_len, sizeof(int));
 
     uint8_t* str1 = new uint8_t[src1_len];
     uint8_t* str2 = new uint8_t[src2_len];
